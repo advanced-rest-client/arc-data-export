@@ -1,0 +1,536 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/test-helpers.js"></script>
+    <script src="data-generator.js"></script>
+    <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../arc-data-export.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <arc-data-export></arc-data-export>
+      </template>
+    </test-fixture>
+
+    <script>
+    /* global fixture, assert, DataGenerator */
+    suite('basic', function() {
+
+      var element;
+
+      suite('_isAllowedExport()', function() {
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        test('Passes test for equal string attributes', function() {
+          var result = element._isAllowedExport('a', 'a');
+          assert.isTrue(result);
+        });
+
+        test('Do not passes test for not equal string attributes', function() {
+          var result = element._isAllowedExport('a', 'b');
+          assert.isFalse(result);
+        });
+
+        test('Passes test if type is in array', function() {
+          var result = element._isAllowedExport(['a','b','c'], 'a');
+          assert.isTrue(result);
+        });
+
+        test('Do not passes test if type is not in array', function() {
+          var result = element._isAllowedExport(['a','b','c'], 'd');
+          assert.isFalse(result);
+        });
+
+        test('Passes test if exportType equals "all"', function() {
+          var result = element._isAllowedExport('all');
+          assert.isTrue(result);
+        });
+      });
+
+      suite('_getDatabasesInfo()', function() {
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        test('Returns empty object for not defined type', function() {
+          var result = element._getDatabasesInfo();
+          assert.lengthOf(Object.keys(result), 0);
+        });
+
+        test('Returns mapping for a single database', function() {
+          var result = element._getDatabasesInfo('history');
+          assert.typeOf(result['history-requests'], 'string');
+          assert.lengthOf(Object.keys(result), 1);
+        });
+
+        test('Returns mapping for projects and saved requests', function() {
+          var result = element._getDatabasesInfo('saved');
+          assert.equal(result['saved-requests'], 'requests');
+          assert.equal(result['legacy-projects'], 'projects');
+          assert.lengthOf(Object.keys(result), 2);
+        });
+
+        test('Returns mapping for defined data types', function() {
+          var types = [
+            'history',
+            'history-url',
+            'websocket',
+            'variables',
+            'headers-sets',
+            'auth',
+            'cookies'
+          ];
+          var result = element._getDatabasesInfo(types);
+          assert.equal(result['history-requests'], 'history');
+          assert.equal(result['websocket-url-history'], 'websocket-url-history');
+          assert.equal(result['url-history'], 'url-history');
+          assert.equal(result['headers-sets'], 'headers-sets');
+          assert.equal(result['auth-data'], 'auth-data');
+          assert.equal(result.variables, 'variables');
+          assert.equal(result.cookies, 'cookies');
+          assert.lengthOf(Object.keys(result), types.length);
+        });
+      });
+
+      suite('_prepareRequestsList()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateRequests('test', 5000);
+          data = DataGenerator.mockRev(data);
+          result = element._prepareRequestsList(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+          }
+        });
+
+        test('legacyProject is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i].legacyProject) {
+              throw new Error('_id is set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#RequestData');
+        });
+
+        test('Has _referenceLegacyProject set', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._referenceLegacyProject) {
+              return;
+            }
+          }
+          throw new Error('_referenceLegacyProject is not set');
+        });
+      });
+
+      suite('_prepareProjectsList()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = [];
+          for (var i = 0; i < 100; i++) {
+            data.push(DataGenerator.createProjectObject());
+          }
+          data = DataGenerator.mockRev(data);
+          result = element._prepareProjectsList(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+          }
+        });
+
+        test('_referenceId is set', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (!result[i]._referenceId) {
+              throw new Error('_referenceId is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#ProjectData');
+        });
+      });
+
+      suite('_prepareHistoryDataList()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateHistory();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareHistoryDataList(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#HistoryData');
+        });
+      });
+
+      suite('_prepareVariablesData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateVariables();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareVariablesData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#Variable');
+        });
+      });
+
+      suite('_prepareHeadersSetsData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateHeadersSets();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareHeadersSetsData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#HeadersSet');
+        });
+      });
+
+      suite('_prepareWsUrlHistoryData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateUrls();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareWsUrlHistoryData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed, key is added', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+            if (!result[i].key) {
+              throw new Error('key is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#WebsocketHistoryData');
+        });
+      });
+
+      suite('_prepareUrlHistoryData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateUrls();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareUrlHistoryData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed, key is added', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+            if (!result[i].key) {
+              throw new Error('key is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#UrlHistoryData');
+        });
+      });
+
+      suite('_prepareAuthData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateAuthData();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareAuthData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed, key is added', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+            if (!result[i].key) {
+              throw new Error('key is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#AuthData');
+        });
+      });
+
+      suite('_prepareCookieData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateCookies();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareCookieData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed, key is added', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+            if (!result[i].key) {
+              throw new Error('key is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#Cookie');
+        });
+      });
+
+      suite('createExportObject', function() {
+        var opts = {};
+        var clb;
+
+        suiteSetup(function() {
+          clb = function(event) {
+            event.detail.version = 'test-version';
+            event.preventDefault();
+          };
+          window.addEventListener('app-version', clb);
+        });
+
+        suiteTeardown(function() {
+          window.removeEventListener('app-version', clb);
+        });
+
+        setup(function() {
+          element = fixture('basic');
+          opts.cookies = DataGenerator.mockRev(DataGenerator.generateCookies());
+          opts['auth-data'] = DataGenerator.mockRev(DataGenerator.generateAuthData());
+          opts['url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
+          opts['websocket-url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
+          opts['headers-sets'] = DataGenerator.mockRev(DataGenerator.generateHeadersSets());
+          opts.variables = DataGenerator.mockRev(DataGenerator.generateVariables());
+          opts.history = DataGenerator.mockRev(DataGenerator.generateHistory());
+          var projects = [];
+          for (var i = 0; i < 100; i++) {
+            projects.push(DataGenerator.createProjectObject());
+          }
+          opts.projects = DataGenerator.mockRev(projects);
+          opts.requests = DataGenerator.mockRev(DataGenerator.generateRequests('test', 100));
+        });
+
+        test('Sets createdAt property', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.createdAt, 'string');
+        });
+
+        test('Version is set', function() {
+          var result = element.createExportObject(opts);
+          assert.equal(result.version, 'test-version');
+        });
+
+        test('Cookies are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.cookies, 'array');
+          assert.lengthOf(result.cookies, opts.cookies.length);
+          assert.isUndefined(result.cookies[0]._rew, 'Array was processed');
+        });
+
+        test('auth-data are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result['auth-data'], 'array');
+          assert.lengthOf(result['auth-data'], opts['auth-data'].length);
+          assert.isUndefined(result['auth-data'][0]._rew, 'Array was processed');
+        });
+
+        test('url-history are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result['url-history'], 'array');
+          assert.lengthOf(result['url-history'], opts['url-history'].length);
+          assert.isUndefined(result['url-history'][0]._rew, 'Array was processed');
+        });
+
+        test('websocket-url-history are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result['websocket-url-history'], 'array');
+          assert.lengthOf(result['websocket-url-history'], opts['websocket-url-history'].length);
+          assert.isUndefined(result['websocket-url-history'][0]._rew, 'Array was processed');
+        });
+
+        test('headers-sets are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result['headers-sets'], 'array');
+          assert.lengthOf(result['headers-sets'], opts['headers-sets'].length);
+          assert.isUndefined(result['headers-sets'][0]._rew, 'Array was processed');
+        });
+
+        test('variables are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.variables, 'array');
+          assert.lengthOf(result.variables, opts.variables.length);
+          assert.isUndefined(result.variables[0]._rew, 'Array was processed');
+        });
+
+        test('history are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.history, 'array');
+          assert.lengthOf(result.history, opts.history.length);
+          assert.isUndefined(result.history[0]._rew, 'Array was processed');
+        });
+
+        test('projects are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.projects, 'array');
+          assert.lengthOf(result.projects, opts.projects.length);
+          assert.isUndefined(result.projects[0]._rew, 'Array was processed');
+        });
+
+        test('requests are set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result.requests, 'array');
+          assert.lengthOf(result.requests, opts.requests.length);
+          assert.isUndefined(result.requests[0]._rew, 'Array was processed');
+        });
+      });
+
+    });
+    </script>
+
+  </body>
+</html>

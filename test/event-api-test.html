@@ -1,0 +1,460 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/test-helpers.js"></script>
+    <script src="../../iron-test-helpers/mock-interactions.js"></script>
+    <script src="data-generator.js"></script>
+    <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../arc-data-export.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <arc-data-export db-chunk="10"></arc-data-export>
+      </template>
+    </test-fixture>
+
+    <script>
+    /* global fixture, assert, DataGenerator, sinon */
+    suite('Querying for data - events API', function() {
+
+      function fire(type, detail, node) {
+        var event = new CustomEvent(type, {
+          detail: detail,
+          bubbles: true,
+          composed: true,
+          cancelable: true
+        });
+        (node || document.body).dispatchEvent(event);
+        return event;
+      }
+
+      suite('export-user-data', function() {
+        const sampleSzie = 100;
+
+        suiteSetup(function() {
+          this.timeout(20000);
+          return DataGenerator.generateData(sampleSzie);
+        });
+
+        suiteTeardown(function() {
+          return DataGenerator.destroyData();
+        });
+
+        var element;
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        test('Creates an export object', function() {
+          var e = fire('export-user-data', {
+            type: 'saved'
+          });
+          assert.isTrue(e.defaultPrevented);
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result, 'object', 'result is an object');
+            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+            assert.equal(result.kind, 'ARC#AllDataExport', 'Kind is set');
+            assert.equal(result.version, 'unknown', 'version is set');
+          });
+        });
+
+        test('Creates saved data export', function() {
+          var e = fire('export-user-data', {
+            type: 'saved'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.projects, 'array', 'projects are set');
+            assert.isAbove(result.projects.length, 0, 'projects are not empty');
+
+            assert.typeOf(result.requests, 'array', 'requests are set');
+            assert.lengthOf(result.requests, sampleSzie, 'Requests size is OK');
+          });
+        });
+
+        test('Creates history data export', function() {
+          var e = fire('export-user-data', {
+            type: 'history'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.history, 'array', 'history are set');
+            assert.lengthOf(result.history, sampleSzie, 'history are not empty');
+          });
+        });
+
+        test('Creates websocket URL history data export', function() {
+          var e = fire('export-user-data', {
+            type: 'websocket'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result['websocket-url-history'], 'array', 'websocket are set');
+            assert.lengthOf(result['websocket-url-history'], 25, 'websocket are not empty');
+          });
+        });
+
+        test('Creates URL history data export', function() {
+          var e = fire('export-user-data', {
+            type: 'history-url'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result['url-history'], 'array', 'url-history are set');
+            assert.lengthOf(result['url-history'], 25, 'url-history are not empty');
+          });
+        });
+
+        test('Creates variables data export', function() {
+          var e = fire('export-user-data', {
+            type: 'variables'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.variables, 'array', 'variables are set');
+            assert.lengthOf(result.variables, 25, 'variables are not empty');
+          });
+        });
+
+        test('Creates headers-sets data export', function() {
+          var e = fire('export-user-data', {
+            type: 'headers-sets'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result['headers-sets'], 'array', 'headers-sets are set');
+            assert.lengthOf(result['headers-sets'], 25, 'headers-sets are not empty');
+          });
+        });
+
+        test('Creates cookies data export', function() {
+          var e = fire('export-user-data', {
+            type: 'cookies'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.cookies, 'array', 'cookies are set');
+            assert.lengthOf(result.cookies, 25, 'cookies are not empty');
+          });
+        });
+
+        test('Creates headers-sets data export', function() {
+          var e = fire('export-user-data', {
+            type: 'auth'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result['auth-data'], 'array', 'auth-data are set');
+            assert.lengthOf(result['auth-data'], 25, 'auth-data are not empty');
+          });
+        });
+
+        test('Creates full data export', function() {
+          var e = fire('export-user-data', {
+            type: 'all'
+          });
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result['auth-data'], 'array', 'auth-data are set');
+            assert.typeOf(result.cookies, 'array', 'cookies are set');
+            assert.typeOf(result['headers-sets'], 'array', 'headers-sets are set');
+            assert.typeOf(result.variables, 'array', 'variables are set');
+            assert.typeOf(result['url-history'], 'array', 'url-history are set');
+            assert.typeOf(result['websocket-url-history'], 'array', 'websocket are set');
+            assert.typeOf(result.history, 'array', 'history are set');
+            assert.typeOf(result.projects, 'array', 'projects are set');
+            assert.typeOf(result.requests, 'array', 'requests are set');
+          });
+        });
+
+        test('Fires export-data custom event', function() {
+          var spy = sinon.spy();
+          element.addEventListener('export-data', spy);
+          var e = fire('export-user-data', {
+            type: 'all'
+          });
+          return e.detail.result
+          .then(() => {
+            assert.isTrue(spy.calledOnce);
+          });
+        });
+      });
+
+      suite('export-project', function() {
+        var element;
+        var project;
+        var requests;
+        var variables;
+
+        suiteSetup(function() {
+          this.timeout(20000);
+          project = DataGenerator.createProjectObject();
+          requests = DataGenerator.generateRequests(project._id, 2000);
+          variables = DataGenerator.generateVariables();
+        });
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        function fireProject() {
+          return fire('export-project', {
+            project: project,
+            requests: requests,
+            variables: variables
+          });
+        }
+
+        test('Event is canceled', function() {
+          var e = fireProject();
+          assert.isTrue(e.defaultPrevented);
+        });
+
+        test('Creates export object', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#Project', 'Kind is set');
+          assert.equal(result.version, 'unknown', 'version is set');
+        });
+
+        test('Adds project to the projects list', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.projects, 'array', 'projects is an array');
+          assert.lengthOf(result.projects, 1, 'projects contains one item');
+        });
+
+        test('Adds requests property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
+        });
+
+        test('Adds variables property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.variables, 'array', 'variables is an array');
+          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+        });
+
+        test('Fires export-data custom event', function() {
+          var spy = sinon.spy();
+          element.addEventListener('export-data', spy);
+          fireProject();
+          assert.isTrue(spy.calledOnce);
+        });
+      });
+
+      suite('export-request', function() {
+        var element;
+        var request;
+        var variables;
+
+        suiteSetup(function() {
+          request = DataGenerator.generateRequests(undefined, 1)[0];
+          variables = DataGenerator.generateVariables();
+        });
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        function fireProject() {
+          return fire('export-request', {
+            request: request,
+            variables: variables
+          });
+        }
+
+        test('Event is canceled', function() {
+          var e = fireProject();
+          assert.isTrue(e.defaultPrevented);
+        });
+
+        test('Creates export object', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#Request', 'Kind is set');
+          assert.equal(result.version, 'unknown', 'version is set');
+        });
+
+        test('Adds request property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.lengthOf(result.requests, 1, 'requests contains one item');
+        });
+
+        test('Adds variables property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.variables, 'array', 'variables is an array');
+          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+        });
+
+        test('Fires export-data custom event', function() {
+          var spy = sinon.spy();
+          element.addEventListener('export-data', spy);
+          fireProject();
+          assert.isTrue(spy.calledOnce);
+        });
+      });
+
+      suite('export-requests', function() {
+        var element;
+        var requests;
+        var variables;
+
+        suiteSetup(function() {
+          this.timeout(20000);
+          requests = DataGenerator.generateRequests(undefined, 2000);
+          variables = DataGenerator.generateVariables();
+        });
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        function fireProject() {
+          return fire('export-requests', {
+            requests: requests,
+            variables: variables
+          });
+        }
+
+        test('Event is canceled', function() {
+          var e = fireProject();
+          assert.isTrue(e.defaultPrevented);
+        });
+
+        test('Creates export object', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#RequestsList', 'Kind is set');
+          assert.equal(result.version, 'unknown', 'version is set');
+        });
+
+        test('Adds requests property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.lengthOf(result.requests, 2000, 'requests is not empty');
+        });
+
+        test('Adds variables property', function() {
+          var e = fireProject();
+          var result = e.detail.result;
+          assert.typeOf(result.variables, 'array', 'variables is an array');
+          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+        });
+
+        test('Fires export-data custom event', function() {
+          var spy = sinon.spy();
+          element.addEventListener('export-data', spy);
+          fireProject();
+          assert.isTrue(spy.calledOnce);
+        });
+      });
+
+      suite('export-create-object', function() {
+        var element;
+        var requests;
+        var variables;
+        var project;
+        var cookies;
+        const kind = 'ARC#TEST';
+        suiteSetup(function() {
+          this.timeout(20000);
+          project = DataGenerator.createProjectObject();
+          requests = DataGenerator.generateRequests(project._id, 2000);
+          variables = DataGenerator.generateVariables();
+          cookies = DataGenerator.generateCookies();
+        });
+
+        setup(function() {
+          element = fixture('basic');
+        });
+
+        function fireExport() {
+          return fire('export-create-object', {
+            types: {
+              projects: [project],
+              requests: requests,
+              variables: variables,
+              cookies: cookies,
+            },
+            kind: kind
+          });
+        }
+
+        test('Event is canceled', function() {
+          var e = fireExport();
+          assert.isTrue(e.defaultPrevented);
+        });
+
+        test('Creates export object', function() {
+          var e = fireExport();
+          var result = e.detail.result;
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, kind, 'Kind is set');
+          assert.equal(result.version, 'unknown', 'version is set');
+        });
+
+        test('Adds requests property', function() {
+          var e = fireExport();
+          var result = e.detail.result;
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.lengthOf(result.requests, 2000, 'requests is not empty');
+        });
+
+        test('Adds variables property', function() {
+          var e = fireExport();
+          var result = e.detail.result;
+          assert.typeOf(result.variables, 'array', 'variables is an array');
+          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+        });
+
+        test('Adds projects property', function() {
+          var e = fireExport();
+          var result = e.detail.result;
+          assert.typeOf(result.projects, 'array', 'projects is an array');
+          assert.lengthOf(result.projects, 1, 'projects has one item');
+        });
+
+        test('Adds cookies property', function() {
+          var e = fireExport();
+          var result = e.detail.result;
+          assert.typeOf(result.cookies, 'array', 'cookies is an array');
+          assert.lengthOf(result.cookies, 25, 'cookies has all items');
+        });
+      });
+    });
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../iron-test-helpers/test-helpers.js"></script>
+    <script src="../../iron-test-helpers/mock-interactions.js"></script>
+    <script src="data-generator.js"></script>
+    <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../arc-data-export.html">
+  </head>
+  <body>
+
+    <test-fixture id="basic">
+      <template>
+        <arc-data-export db-chunk="10"></arc-data-export>
+      </template>
+    </test-fixture>
+
+    <script>
+    /* global fixture, assert, DataGenerator */
+    suite('Querying for data', function() {
+
+      const sampleSzie = 100;
+
+      suiteSetup(function() {
+        this.timeout(20000);
+        return DataGenerator.generateData(sampleSzie);
+      });
+
+      suiteTeardown(function() {
+        return DataGenerator.destroyData();
+      });
+
+      var element;
+      setup(function() {
+        element = fixture('basic');
+      });
+
+      test('Gets all requests data', function() {
+        return element._getDatabaseEntries('saved-requests')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'saved-requests', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, sampleSzie, 'Size is ok');
+          assert.equal(result.data[0].type, 'saved', 'Is a saved request');
+        });
+      });
+
+      test('Gets all history data', function() {
+        return element._getDatabaseEntries('history-requests')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'history-requests', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, sampleSzie, 'Size is ok');
+          assert.isUndefined(result.data[0].type, 'Is a history request');
+        });
+      });
+
+      test('Gets all projects data', function() {
+        return element._getDatabaseEntries('legacy-projects')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'legacy-projects', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 1, 'Size is ok');
+          assert.typeOf(result.data[0].description, 'string', 'Is a project item');
+        });
+      });
+
+      test('Gets all websocket URL history data', function() {
+        return element._getDatabaseEntries('websocket-url-history')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'websocket-url-history', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+        });
+      });
+
+      test('Gets all URL data', function() {
+        return element._getDatabaseEntries('url-history')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'url-history', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+        });
+      });
+
+      test('Gets all variables data', function() {
+        return element._getDatabaseEntries('variables')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'variables', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+          assert.equal(result.data[0].environment, 'default', 'Is a variable item');
+        });
+      });
+
+      test('Gets all headers-sets data', function() {
+        return element._getDatabaseEntries('headers-sets')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'headers-sets', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+          assert.typeOf(result.data[0].headers, 'string', 'Is a headers set item');
+        });
+      });
+
+      test('Gets all cookies data', function() {
+        return element._getDatabaseEntries('cookies')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'cookies', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+          assert.typeOf(result.data[0].domain, 'string', 'Is a cookie item');
+        });
+      });
+
+      test('Gets all auth-data data', function() {
+        return element._getDatabaseEntries('auth-data')
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.name, 'auth-data', 'Name is set');
+          assert.typeOf(result.data, 'array', 'Data is an array');
+          assert.lengthOf(result.data, 25, 'Size is ok');
+          assert.equal(result.data[0].type, 'basic', 'Is an auth data item');
+        });
+      });
+
+      test('prepares export for a single database', function() {
+        var opts = {
+          type: 'auth'
+        };
+        return element.prepareExport(opts)
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.version, 'unknown', 'version is unknown');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
+          assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
+        });
+      });
+
+      test('prepares export for a multiple databases', function() {
+        var opts = {
+          type: ['history', 'saved', 'websocket', 'history-url', 'auth']
+        };
+        return element.prepareExport(opts)
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.version, 'unknown', 'version is unknown');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
+          assert.typeOf(result.history, 'array', 'history is an array');
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.typeOf(result.projects, 'array', 'projects is an array');
+          assert.typeOf(result['websocket-url-history'], 'array', 'websocket-url-history is an array');
+          assert.typeOf(result['url-history'], 'array', 'url-history is an array');
+          assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
+        });
+      });
+
+      test('prepares export for a all databases', function() {
+        var opts = {
+          type: 'all'
+        };
+        return element.prepareExport(opts)
+        .then(result => {
+          assert.typeOf(result, 'object', 'result is an object');
+          assert.equal(result.version, 'unknown', 'version is unknown');
+          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+          assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
+
+          assert.typeOf(result.history, 'array', 'history is an array');
+          assert.typeOf(result.requests, 'array', 'requests is an array');
+          assert.typeOf(result.projects, 'array', 'projects is an array');
+          assert.typeOf(result['websocket-url-history'], 'array', 'websocket-url-history is an array');
+          assert.typeOf(result['url-history'], 'array', 'url-history is an array');
+          assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
+          assert.typeOf(result.variables, 'array', 'variables is an array');
+          assert.typeOf(result.cookies, 'array', 'cookies is an array');
+          assert.typeOf(result['headers-sets'], 'array', 'headers-sets is an array');
+        });
+      });
+    });
+    </script>
+
+  </body>
+</html>
