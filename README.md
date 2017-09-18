@@ -190,6 +190,8 @@ Special value of `all` exports all stored in local datastore data.
 #### Properties
 
 -   **type** (String or Array of String, required) A data type name or list of data type names
+-   **noExport** (Boolean, optional) If set it will not send `export-data` event.
+-   **file** (String, optional) Suggested file name in the save file dialog.
 
 #### event.detail.result
 

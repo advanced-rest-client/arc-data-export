@@ -195,6 +195,23 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.isTrue(spy.calledOnce);
           });
         });
+
+        test('export-data event contains export object', function() {
+          var eventData;
+          element.addEventListener('export-data', function(e) {
+            eventData = e.detail;
+          });
+          var e = fire('export-user-data', {
+            type: 'all'
+          });
+          return e.detail.result
+          .then(() => {
+            assert.typeOf(eventData, 'object');
+            assert.equal(eventData.type, 'application/json');
+            assert.typeOf(eventData.data, 'object');
+            assert.equal(eventData.data.kind, 'ARC#AllDataExport');
+          });
+        });
       });
 
       suite('export-project', function() {

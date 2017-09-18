@@ -1,3 +1,14 @@
+<a name="0.1.4"></a>
+## [0.1.4](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.3...0.1.4) (2017-09-18)
+
+
+### Fix
+
+* Fixed test ([6cf9dcf93e91426745ea8e3f27cc5d08811ef857](https://github.com/advanced-rest-client/arc-data-export/commit/6cf9dcf93e91426745ea8e3f27cc5d08811ef857))
+* The `_prepareDataHandler` now fires `export-data` after Promise resolves. ([03f010a8543103b8c79cbf8ad22c3cf9a802704d](https://github.com/advanced-rest-client/arc-data-export/commit/03f010a8543103b8c79cbf8ad22c3cf9a802704d))
+
+
+
 <a name="0.1.3"></a>
 ## [0.1.3](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.2...0.1.3) (2017-09-18)
 
