@@ -207,7 +207,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return e.detail.result
           .then(() => {
             assert.typeOf(eventData, 'object');
-            assert.equal(eventData.kind, 'ARC#AllDataExport');
+            assert.equal(eventData.type, 'application/json');
+            assert.typeOf(eventData.data, 'object');
+            assert.equal(eventData.data.kind, 'ARC#AllDataExport');
           });
         });
       });
