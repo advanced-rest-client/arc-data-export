@@ -710,7 +710,8 @@ Polymer({
     e.detail.result = exportObject;
     this.fire('export-data', {
       data: exportObject,
-      type: 'application/json'
+      type: 'application/json',
+      file: e.detail.file
     }, {
       cancelable: true
     });
