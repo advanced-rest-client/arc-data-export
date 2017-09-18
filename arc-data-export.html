@@ -202,6 +202,8 @@ Special value of `all` exports all stored in local datastore data.
 #### Properties
 
 -   **type** (String or Array of String, required) A data type name or list of data type names
+-   **noExport** (Boolean, optional) If set it will not send `export-data` event.
+-   **file** (String, optional) Suggested file name in the save file dialog.
 
 #### event.detail.result
 
@@ -708,12 +710,18 @@ Polymer({
       type: type
     });
     e.detail.result = exportObject;
-    this.fire('export-data', {
-      data: exportObject,
-      type: 'application/json',
-      file: e.detail.file
-    }, {
-      cancelable: true
+    exportObject.then(result => {
+      if (e.detail.noExport) {
+        return result;
+      }
+      this.fire('export-data', {
+        data: result,
+        type: 'application/json',
+        file: e.detail.file
+      }, {
+        cancelable: true
+      });
+      return result;
     });
   }
 });
