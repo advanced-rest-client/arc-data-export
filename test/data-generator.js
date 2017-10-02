@@ -78,7 +78,9 @@ DataGenerator.generateVariables = function(size) {
       enabled: true,
       environment: 'default',
       value: chance.string(),
-      variable: chance.string()
+      variable: chance.string(),
+      _id: chance.string(),
+      _rev: chance.string()
     });
   }
   return result;
@@ -92,7 +94,9 @@ DataGenerator.generateHeadersSets = function(size) {
       created: chance.hammertime(),
       headers: chance.paragraph({sentences: 1}),
       name: chance.string(),
-      order: 0
+      order: 0,
+      _id: chance.string(),
+      _rev: chance.string()
     });
   }
   return result;

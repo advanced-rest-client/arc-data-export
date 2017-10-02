@@ -420,6 +420,7 @@ Polymer({
         // get all docs function without any reason. It should be eleminated
         return;
       }
+      item.key = item._id;
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#Variable';
@@ -431,6 +432,7 @@ Polymer({
 
   _prepareHeadersSetsData: function(sets) {
     var result = sets.map(item => {
+      item.key = item._id;
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#HeadersSet';
