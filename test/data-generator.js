@@ -78,7 +78,9 @@ DataGenerator.generateVariables = function(size) {
       enabled: true,
       environment: 'default',
       value: chance.string(),
-      variable: chance.string()
+      variable: chance.string(),
+      _id: chance.string(),
+      _rev: chance.string()
     });
   }
   return result;
@@ -92,7 +94,9 @@ DataGenerator.generateHeadersSets = function(size) {
       created: chance.hammertime(),
       headers: chance.paragraph({sentences: 1}),
       name: chance.string(),
-      order: 0
+      order: 0,
+      _id: chance.string(),
+      _rev: chance.string()
     });
   }
   return result;
@@ -137,6 +141,12 @@ DataGenerator.generateData = function(requestsSize) {
   var headersSets = new PouchDB('headers-sets');
   var cookies = new PouchDB('cookies');
   var authData = new PouchDB('auth-data');
+
+  function cleanInsert(item) {
+    delete item._id;
+    delete item._rev;
+    return item;
+  };
   return projectsDb.put(project)
   .then(result => {
     if (!result.ok) {
@@ -147,8 +157,16 @@ DataGenerator.generateData = function(requestsSize) {
   .then(() => history.bulkDocs(DataGenerator.generateHistory(requestsSize)))
   .then(() => wsUrls.bulkDocs(DataGenerator.generateUrls()))
   .then(() => urls.bulkDocs(DataGenerator.generateUrls()))
-  .then(() => variables.bulkDocs(DataGenerator.generateVariables()))
-  .then(() => headersSets.bulkDocs(DataGenerator.generateHeadersSets()))
+  .then(() => {
+    let v = DataGenerator.generateVariables();
+    v = v.map(cleanInsert);
+    return variables.bulkDocs(v);
+  })
+  .then(() => {
+    let v = DataGenerator.generateHeadersSets();
+    v = v.map(cleanInsert);
+    return headersSets.bulkDocs(v);
+  })
   .then(() => cookies.bulkDocs(DataGenerator.generateCookies()))
   .then(() => authData.bulkDocs(DataGenerator.generateAuthData()));
 };
