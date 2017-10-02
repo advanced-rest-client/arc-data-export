@@ -1,3 +1,14 @@
+<a name="0.1.6"></a>
+## [0.1.6](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.4...0.1.6) (2017-10-02)
+
+
+### Update
+
+* Added `key` property to headers and variables export object. ([4ff690e3c6c10dde8ce807e2cb9b141c6cf8dce6](https://github.com/advanced-rest-client/arc-data-export/commit/4ff690e3c6c10dde8ce807e2cb9b141c6cf8dce6))
+* Added `key` property to headers and variables export object. ([e3ad70468b0fbca5e0f519f5b6e5ff13d8a6e4fb](https://github.com/advanced-rest-client/arc-data-export/commit/e3ad70468b0fbca5e0f519f5b6e5ff13d8a6e4fb))
+
+
+
 <a name="0.1.5"></a>
 ## [0.1.5](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.4...0.1.5) (2017-09-18)
 
