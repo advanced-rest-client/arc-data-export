@@ -255,6 +255,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         });
 
+        test('Contains key property', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            assert.typeOf(result[i].key, 'string');
+          }
+        });
+
         test('kind property is set', function() {
           assert.equal(result[0].kind, 'ARC#Variable');
         });
@@ -282,6 +288,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             if (result[i]._rev) {
               throw new Error('_rev is set');
             }
+          }
+        });
+
+        test('Contains key property', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            assert.typeOf(result[i].key, 'string');
           }
         });
 
