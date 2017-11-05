@@ -1,3 +1,17 @@
+<a name="0.2.1"></a>
+## [0.2.1](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.8...0.2.1) (2017-11-05)
+
+
+### Fix
+
+* Fixing tests for new API ([764027edaa2843c2f5b5e1e674fba3d11bae217c](https://github.com/advanced-rest-client/arc-data-export/commit/764027edaa2843c2f5b5e1e674fba3d11bae217c))
+
+### Update
+
+* Updated API to returns promise after the object is exported. ([0171e1656b7b340380221f520db9a94db3677721](https://github.com/advanced-rest-client/arc-data-export/commit/0171e1656b7b340380221f520db9a94db3677721))
+
+
+
 <a name="0.1.8"></a>
 ## [0.1.8](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.7...0.1.8) (2017-11-05)
 
