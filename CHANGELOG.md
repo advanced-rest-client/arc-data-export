@@ -1,3 +1,13 @@
+<a name="0.1.7"></a>
+## [0.1.7](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.6...0.1.7) (2017-11-05)
+
+
+### Update
+
+* Added "destination" property for data export. ([5263c3be1b276d1b7d7f0aca124acc83cb5a20bc](https://github.com/advanced-rest-client/arc-data-export/commit/5263c3be1b276d1b7d7f0aca124acc83cb5a20bc))
+
+
+
 <a name="0.1.6"></a>
 ## [0.1.6](https://github.com/advanced-rest-client/arc-data-export/compare/0.1.4...0.1.6) (2017-10-02)
 
