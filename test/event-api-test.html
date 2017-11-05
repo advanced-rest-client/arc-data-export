@@ -210,6 +210,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             assert.equal(eventData.type, 'application/json');
             assert.typeOf(eventData.data, 'object');
             assert.equal(eventData.data.kind, 'ARC#AllDataExport');
+            assert.typeOf(eventData.file, 'string');
+          });
+        });
+
+        test('Fires google-drive-data-save custom event', function() {
+          var spy = sinon.spy();
+          element.addEventListener('google-drive-data-save', spy);
+          var e = fire('export-user-data', {
+            type: 'all',
+            destination: 'drive'
+          });
+          return e.detail.result
+          .then(() => {
+            assert.isTrue(spy.calledOnce);
+          });
+        });
+
+        test('google-drive-data-save event contains export object', function() {
+          var eventData;
+          element.addEventListener('google-drive-data-save', function clb(e) {
+            element.removeEventListener('google-drive-data-save', clb);
+            eventData = e.detail;
+          });
+          var e = fire('export-user-data', {
+            type: 'all',
+            destination: 'drive'
+          });
+          return e.detail.result
+          .then(() => {
+            assert.typeOf(eventData, 'object');
+            assert.equal(eventData.contentType, 'application/json');
+            assert.typeOf(eventData.content, 'object');
+            assert.typeOf(eventData.file, 'string');
           });
         });
       });

@@ -600,12 +600,7 @@ Polymer({
     }
     var exportObject = this.createExportObject(opts);
     e.detail.result = exportObject;
-    this.fire('export-data', {
-      data: exportObject,
-      type: 'application/json'
-    }, {
-      cancelable: true
-    });
+    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
   },
   /**
    * Handler for the `export-requests` custom event. Creates the export
@@ -630,12 +625,7 @@ Polymer({
     }
     var exportObject = this.createExportObject(opts);
     e.detail.result = exportObject;
-    this.fire('export-data', {
-      data: exportObject,
-      type: 'application/json'
-    }, {
-      cancelable: true
-    });
+    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
   },
   /**
    * Exports a single request. Creates an export object for a single request
@@ -659,12 +649,7 @@ Polymer({
     }
     var exportObject = this.createExportObject(opts);
     e.detail.result = exportObject;
-    this.fire('export-data', {
-      data: exportObject,
-      type: 'application/json'
-    }, {
-      cancelable: true
-    });
+    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
   },
   /**
    * Handler for the `export-create-object` event.
@@ -716,15 +701,69 @@ Polymer({
       if (e.detail.noExport) {
         return result;
       }
-      this.fire('export-data', {
-        data: result,
-        type: 'application/json',
-        file: e.detail.file
-      }, {
-        cancelable: true
-      });
-      return result;
+      return this._sendExport(result, e.detail.file, e.detail.destination)
+      .then(() => result);
     });
+  },
+  /**
+   * Sends export event depending on `destination`
+   *
+   * @param {Object|String} data Data to be exported.
+   * @param {String} filename Export file name
+   * @param {String} destination Export destination. `file` or `drive` is
+   * supported. Default to file.
+   * @return {Promise} A promise resolved when data are expored.
+   */
+  _sendExport: function(data, filename, destination) {
+    destination = destination || 'file';
+    filename = filename || 'arc-data-export.json';
+    let promise;
+    if (destination === 'drive') {
+      promise = this._exportDrive(data, filename);
+    } else {
+      promise = this._exportFile(data, filename);
+    }
+    return promise;
+  },
+
+  /**
+   * Requests application to export data to file.
+   *
+   * @param {Object|String} data Data to export
+   * @param {String} file File name
+   */
+  _exportFile: function(data, file) {
+    var event = this.fire('export-data', {
+      data: data,
+      type: 'application/json',
+      file: file
+    }, {
+      cancelable: true
+    });
+    if (!event.defaultPrevented) {
+      return Promise.reject(new Error('File export module not found.'));
+    }
+    return event.detail.result;
+  },
+
+  /**
+   * Requests application to export data to Google Drive.
+   *
+   * @param {Object|String} data Data to export
+   * @param {String} file File name
+   */
+  _exportDrive: function(data, file) {
+    var event = this.fire('google-drive-data-save', {
+      content: data,
+      contentType: 'application/json',
+      file: file
+    }, {
+      cancelable: true
+    });
+    if (!event.defaultPrevented) {
+      return Promise.reject(new Error('Google Drive export module not found.'));
+    }
+    return event.detail.result;
   }
 });
 </script>
