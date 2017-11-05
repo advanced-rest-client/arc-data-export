@@ -624,8 +624,8 @@ Polymer({
       opts.variables = e.detail.variables;
     }
     var exportObject = this.createExportObject(opts);
-    e.detail.result = exportObject;
-    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
+    e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination)
+    .then(() => exportObject);
   },
   /**
    * Exports a single request. Creates an export object for a single request
@@ -648,8 +648,8 @@ Polymer({
       opts.variables = e.detail.variables;
     }
     var exportObject = this.createExportObject(opts);
-    e.detail.result = exportObject;
-    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
+    e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination)
+    .then(() => exportObject);
   },
   /**
    * Handler for the `export-create-object` event.
