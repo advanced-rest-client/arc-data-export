@@ -319,10 +319,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var element;
         var request;
         var variables;
+        var callback;
 
         suiteSetup(function() {
           request = DataGenerator.generateRequests(undefined, 1)[0];
           variables = DataGenerator.generateVariables();
+          callback = function(e) {
+            e.preventDefault();
+            e.detail.result = Promise.resolve({});
+          };
+          window.addEventListener('export-data', callback);
+        });
+
+        suiteTeardown(function() {
+          window.removeEventListener('export-data', callback);
         });
 
         setup(function() {
@@ -343,25 +353,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('Creates export object', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result, 'object', 'result is an object');
-          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-          assert.equal(result.kind, 'ARC#Request', 'Kind is set');
-          assert.equal(result.version, 'unknown', 'version is set');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result, 'object', 'result is an object');
+            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+            assert.equal(result.kind, 'ARC#Request', 'Kind is set');
+            assert.equal(result.version, 'unknown', 'version is set');
+          });
         });
 
         test('Adds request property', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.requests, 'array', 'requests is an array');
-          assert.lengthOf(result.requests, 1, 'requests contains one item');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.requests, 'array', 'requests is an array');
+            assert.lengthOf(result.requests, 1, 'requests contains one item');
+          });
         });
 
         test('Adds variables property', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.variables, 'array', 'variables is an array');
-          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.variables, 'array', 'variables is an array');
+            assert.isAbove(result.variables.length, 0, 'variables is not empty');
+          });
         });
 
         test('Fires export-data custom event', function() {
@@ -376,11 +392,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var element;
         var requests;
         var variables;
-
+        var callback;
         suiteSetup(function() {
           this.timeout(20000);
           requests = DataGenerator.generateRequests(undefined, 2000);
           variables = DataGenerator.generateVariables();
+          callback = function(e) {
+            e.preventDefault();
+            e.detail.result = Promise.resolve({});
+          };
+          window.addEventListener('export-data', callback);
+        });
+
+        suiteTeardown(function() {
+          window.removeEventListener('export-data', callback);
         });
 
         setup(function() {
@@ -401,25 +426,31 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         test('Creates export object', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result, 'object', 'result is an object');
-          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-          assert.equal(result.kind, 'ARC#RequestsList', 'Kind is set');
-          assert.equal(result.version, 'unknown', 'version is set');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result, 'object', 'result is an object');
+            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+            assert.equal(result.kind, 'ARC#RequestsList', 'Kind is set');
+            assert.equal(result.version, 'unknown', 'version is set');
+          });
         });
 
         test('Adds requests property', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.requests, 'array', 'requests is an array');
-          assert.lengthOf(result.requests, 2000, 'requests is not empty');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.requests, 'array', 'requests is an array');
+            assert.lengthOf(result.requests, 2000, 'requests is not empty');
+          });
         });
 
         test('Adds variables property', function() {
           var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.variables, 'array', 'variables is an array');
-          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+          return e.detail.result
+          .then(result => {
+            assert.typeOf(result.variables, 'array', 'variables is an array');
+            assert.isAbove(result.variables.length, 0, 'variables is not empty');
+          });
         });
 
         test('Fires export-data custom event', function() {
