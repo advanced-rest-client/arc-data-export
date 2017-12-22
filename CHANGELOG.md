@@ -1,3 +1,13 @@
+<a name="0.2.3"></a>
+## [0.2.3](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.2...0.2.3) (2017-12-22)
+
+
+### New
+
+* Added support for host-rules ([485c3feb4a0176e96852576b9b8c3109adbb8d90](https://github.com/advanced-rest-client/arc-data-export/commit/485c3feb4a0176e96852576b9b8c3109adbb8d90))
+
+
+
 <a name="0.2.2"></a>
 ## [0.2.2](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.1...0.2.2) (2017-11-05)
 
