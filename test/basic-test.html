@@ -98,7 +98,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             'variables',
             'headers-sets',
             'auth',
-            'cookies'
+            'cookies',
+            'host-rules'
           ];
           var result = element._getDatabasesInfo(types);
           assert.equal(result['history-requests'], 'history');
@@ -106,6 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.equal(result['url-history'], 'url-history');
           assert.equal(result['headers-sets'], 'headers-sets');
           assert.equal(result['auth-data'], 'auth-data');
+          assert.equal(result['host-rules'], 'host-rules');
           assert.equal(result.variables, 'variables');
           assert.equal(result.cookies, 'cookies');
           assert.lengthOf(Object.keys(result), types.length);
@@ -434,6 +436,39 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
       });
 
+      suite('_prepareHostRulesData()', function() {
+        var result;
+
+        setup(function() {
+          element = fixture('basic');
+          var data = DataGenerator.generateHostRulesData();
+          data = DataGenerator.mockRev(data);
+          result = element._prepareHostRulesData(data);
+        });
+
+        test('Result is an array', function() {
+          assert.typeOf(result, 'array');
+        });
+
+        test('_rev and _id is removed, key is added', function() {
+          for (var i = 0, len = result.length; i < len; i++) {
+            if (result[i]._id) {
+              throw new Error('_id is set');
+            }
+            if (result[i]._rev) {
+              throw new Error('_rev is set');
+            }
+            if (!result[i].key) {
+              throw new Error('key is not set');
+            }
+          }
+        });
+
+        test('kind property is set', function() {
+          assert.equal(result[0].kind, 'ARC#HostRule');
+        });
+      });
+
       suite('createExportObject', function() {
         var opts = {};
         var clb;
@@ -459,6 +494,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           opts['headers-sets'] = DataGenerator.mockRev(DataGenerator.generateHeadersSets());
           opts.variables = DataGenerator.mockRev(DataGenerator.generateVariables());
           opts.history = DataGenerator.mockRev(DataGenerator.generateHistory());
+          opts['host-rules'] = DataGenerator.mockRev(DataGenerator.generateHostRulesData());
           var projects = [];
           for (var i = 0; i < 100; i++) {
             projects.push(DataGenerator.createProjectObject());
@@ -538,6 +574,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.typeOf(result.requests, 'array');
           assert.lengthOf(result.requests, opts.requests.length);
           assert.isUndefined(result.requests[0]._rew, 'Array was processed');
+        });
+
+        test('host-rules is set', function() {
+          var result = element.createExportObject(opts);
+          assert.typeOf(result['host-rules'], 'array');
+          assert.lengthOf(result['host-rules'], opts['host-rules'].length);
+          assert.isUndefined(result['host-rules'][0]._rew, 'Array was processed');
         });
       });
 

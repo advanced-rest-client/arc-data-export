@@ -351,6 +351,9 @@ Polymer({
     if (opts.cookies && opts.cookies.length) {
       result.cookies = this._prepareCookieData(opts.cookies);
     }
+    if (('host-rules' in opts) && opts['host-rules'].length) {
+      result['host-rules'] = this._prepareHostRulesData(opts['host-rules']);
+    }
     return result;
   },
 
@@ -462,6 +465,16 @@ Polymer({
     });
     return result;
   },
+
+  _prepareHostRulesData: function(hostRules) {
+    return hostRules.map(item => {
+      item.key = item._id;
+      delete item._rev;
+      delete item._id;
+      item.kind = 'ARC#HostRule';
+      return item;
+    });
+  },
   /**
    * Checks if `type` is one of the allowed export types defined in
    * `exportType`.
@@ -511,6 +524,9 @@ Polymer({
     }
     if (this._isAllowedExport(type, 'cookies')) {
       databases.cookies = 'cookies';
+    }
+    if (this._isAllowedExport(type, 'host-rules')) {
+      databases['host-rules'] = 'host-rules';
     }
     return databases;
   },

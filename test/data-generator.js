@@ -130,6 +130,21 @@ DataGenerator.generateAuthData = function(size) {
   return result;
 };
 
+DataGenerator.generateHostRulesData = function(size) {
+  size = size || 25;
+  var result = [];
+  for (var i = 0; i < size; i++) {
+    result.push({
+      _id: 'basic/' + chance.string(),
+      from: chance.url(),
+      to: chance.url(),
+      enabled: chance.bool(),
+      comment: chance.string()
+    });
+  }
+  return result;
+};
+
 DataGenerator.generateData = function(requestsSize) {
   var project = DataGenerator.createProjectObject();
   var savedDb = new PouchDB('saved-requests');
@@ -141,12 +156,13 @@ DataGenerator.generateData = function(requestsSize) {
   var headersSets = new PouchDB('headers-sets');
   var cookies = new PouchDB('cookies');
   var authData = new PouchDB('auth-data');
+  var hostRulesData = new PouchDB('host-rules');
 
   function cleanInsert(item) {
     delete item._id;
     delete item._rev;
     return item;
-  };
+  }
   return projectsDb.put(project)
   .then(result => {
     if (!result.ok) {
@@ -168,7 +184,8 @@ DataGenerator.generateData = function(requestsSize) {
     return headersSets.bulkDocs(v);
   })
   .then(() => cookies.bulkDocs(DataGenerator.generateCookies()))
-  .then(() => authData.bulkDocs(DataGenerator.generateAuthData()));
+  .then(() => authData.bulkDocs(DataGenerator.generateAuthData()))
+  .then(() => hostRulesData.bulkDocs(DataGenerator.generateHostRulesData()));
 };
 
 DataGenerator.destroyData = function() {
@@ -181,6 +198,7 @@ DataGenerator.destroyData = function() {
   var headersSets = new PouchDB('headers-sets');
   var cookies = new PouchDB('cookies');
   var authData = new PouchDB('auth-data');
+  var hostRulesData = new PouchDB('host-rules');
   return savedDb.destroy()
   .then(() => projectsDb.destroy())
   .then(() => history.destroy())
@@ -189,7 +207,8 @@ DataGenerator.destroyData = function() {
   .then(() => variables.destroy())
   .then(() => headersSets.destroy())
   .then(() => cookies.destroy())
-  .then(() => authData.destroy());
+  .then(() => authData.destroy())
+  .then(() => hostRulesData.destroy());
 };
 
 DataGenerator.mockRev = function(data) {

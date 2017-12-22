@@ -162,7 +162,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       test('prepares export for a multiple databases', function() {
         var opts = {
-          type: ['history', 'saved', 'websocket', 'history-url', 'auth']
+          type: ['history', 'saved', 'websocket', 'history-url', 'auth', 'host-rules']
         };
         return element.prepareExport(opts)
         .then(result => {
@@ -176,6 +176,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.typeOf(result['websocket-url-history'], 'array', 'websocket-url-history is an array');
           assert.typeOf(result['url-history'], 'array', 'url-history is an array');
           assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
+          assert.typeOf(result['host-rules'], 'array', 'host-rules is an array');
         });
       });
 
@@ -199,6 +200,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.typeOf(result.variables, 'array', 'variables is an array');
           assert.typeOf(result.cookies, 'array', 'cookies is an array');
           assert.typeOf(result['headers-sets'], 'array', 'headers-sets is an array');
+          assert.typeOf(result['host-rules'], 'array', 'host-rules is an array');
         });
       });
     });
