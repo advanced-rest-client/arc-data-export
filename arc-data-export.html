@@ -615,8 +615,7 @@ Polymer({
       opts.variables = e.detail.variables;
     }
     var exportObject = this.createExportObject(opts);
-    e.detail.result = exportObject;
-    return this._sendExport(exportObject, e.detail.file, e.detail.destination);
+    e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination);
   },
   /**
    * Handler for the `export-requests` custom event. Creates the export
