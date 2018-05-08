@@ -268,7 +268,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return fire('export-project', {
             project: project,
             requests: requests,
-            variables: variables
+            variables: variables,
+            destination: 'file',
+            file: 'test-file'
           });
         }
 
@@ -277,34 +279,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           assert.isTrue(e.defaultPrevented);
         });
 
-        test('Creates export object', function() {
+        test('Returns a promise', function() {
           var e = fireProject();
           var result = e.detail.result;
-          assert.typeOf(result, 'object', 'result is an object');
-          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-          assert.equal(result.kind, 'ARC#Project', 'Kind is set');
-          assert.equal(result.version, 'unknown', 'version is set');
-        });
-
-        test('Adds project to the projects list', function() {
-          var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.projects, 'array', 'projects is an array');
-          assert.lengthOf(result.projects, 1, 'projects contains one item');
-        });
-
-        test('Adds requests property', function() {
-          var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.requests, 'array', 'requests is an array');
-          assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
-        });
-
-        test('Adds variables property', function() {
-          var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.variables, 'array', 'variables is an array');
-          assert.isAbove(result.variables.length, 0, 'variables is not empty');
+          assert.typeOf(result.then, 'function');
         });
 
         test('Fires export-data custom event', function() {
@@ -312,6 +290,62 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           element.addEventListener('export-data', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
+        });
+
+        test('export-data contains project object', function(done) {
+          element.addEventListener('export-data', function clb(e) {
+            element.removeEventListener('export-data', clb);
+            var result = e.detail.data;
+            assert.typeOf(result, 'object', 'result is an object');
+            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
+            assert.equal(result.kind, 'ARC#Project', 'Kind is set');
+            assert.equal(result.version, 'unknown', 'version is set');
+            done();
+          });
+          fireProject();
+        });
+
+        test('Adds project to the projects listt', function(done) {
+          element.addEventListener('export-data', function clb(e) {
+            element.removeEventListener('export-data', clb);
+            var result = e.detail.data;
+            assert.typeOf(result.projects, 'array', 'projects is an array');
+            assert.lengthOf(result.projects, 1, 'projects contains one item');
+            done();
+          });
+          fireProject();
+        });
+
+        test('Adds requests property', function(done) {
+          element.addEventListener('export-data', function clb(e) {
+            element.removeEventListener('export-data', clb);
+            var result = e.detail.data;
+            assert.typeOf(result.requests, 'array', 'requests is an array');
+            assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
+            done();
+          });
+          fireProject();
+        });
+
+        test('Adds variables property', function(done) {
+          element.addEventListener('export-data', function clb(e) {
+            element.removeEventListener('export-data', clb);
+            var result = e.detail.data;
+            assert.typeOf(result.variables, 'array', 'variables is an array');
+            assert.isAbove(result.variables.length, 0, 'variables is not empty');
+            done();
+          });
+          fireProject();
+        });
+
+        test('export-data contains meta data', function(done) {
+          element.addEventListener('export-data', function clb(e) {
+            element.removeEventListener('export-data', clb);
+            assert.equal(e.detail.file, 'test-file');
+            assert.equal(e.detail.type, 'application/json');
+            done();
+          });
+          fireProject();
         });
       });
 
