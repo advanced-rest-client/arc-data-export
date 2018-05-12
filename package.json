@@ -13,7 +13,6 @@
     "lint": "polymer lint arc-data-export.html",
     "test-sauce": "polymer test --plugin sauce --job-name \"arc-data-export:local-test\"",
     "test": "polymer test --plugin local",
-    "update-deps": "npm update --quiet && bower update --quiet",
     "update-types": "gen-typescript-declarations --deleteExisting --outDir ."
   },
   "repository": {
