@@ -79,7 +79,7 @@ the License.
  * #### Example
  *
  * ```javascript
- * var event = new CustomEvent('export-request', {
+ * const event = new CustomEvent('export-request', {
  *    cancelable: true,
  *    composed: true,
  *    bubbles: true,
@@ -88,9 +88,9 @@ the License.
  *      variables: [...] // This is optional
  *    }
  *  });
- *  document.body.dispatchEvent(event);
- *  if (event.defaultPrevented) {
- *    console.log(event.detail.result);
+ *  document.body.dispatchEvent(e);
+ *  if (e.defaultPrevented) {
+ *    console.log(e.detail.result);
  *  }
  * ```
  *
@@ -111,7 +111,7 @@ the License.
  * #### Example
  *
  * ```javascript
- * var event = new CustomEvent('export-requests', {
+ * const e = new CustomEvent('export-requests', {
  *    cancelable: true,
  *    composed: true,
  *    bubbles: true,
@@ -120,9 +120,9 @@ the License.
  *      variables: [...] // This is optional
  *    }
  *  });
- *  document.body.dispatchEvent(event);
- *  if (event.defaultPrevented) {
- *    console.log(event.detail.result);
+ *  document.body.dispatchEvent(e);
+ *  if (e.defaultPrevented) {
+ *    console.log(e.detail.result);
  *  }
  * ```
  *
@@ -156,7 +156,7 @@ the License.
  * #### Example
  *
  * ```javascript
- * cont e = new CustomEvent('export-create-object', {
+ * const e = new CustomEvent('export-create-object', {
  *    cancelable: true,
  *    composed: true,
  *    bubbles: true,
