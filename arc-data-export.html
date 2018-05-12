@@ -20,21 +20,15 @@ the License.
  * It gets requested data from the datastore and creates an export object or accept
  * external data to create export object.
  *
- * Note, the export object has common for all export types. Use `kind` property
- * to determine export content type.
- * For example `export-project` object contains `projects` properties with single
- * item in the array while kind `AllDataExport` may have zero or more objects in
- * the array.
+ * It does not include any logic related to actual data export (to file or
+ * to drive) as implementation may be different depending on the plaform.
  *
  * ## Event based API
  *
- * The element support event based API. By adding the element anywhere to the DOM
- * it enables event listeners on the `window` object.
+ * The element supports event based API. When adding the element anywhere to the DOM
+ * it attaches event listeners on the `window` object.
  *
- * All events are canceled and propagation is stopped.
- * Also, all handled events contains a `result` property on the `detail` object
- * added by the handler. It may contain the result object or promise that resolves
- * to a result object (in case of async operation).
+ * All events are canceled and the propagation is stopped.
  *
  * ### `export-project` event
  *
@@ -162,7 +156,7 @@ the License.
  * #### Example
  *
  * ```javascript
- * var event = new CustomEvent('export-create-object', {
+ * cont e = new CustomEvent('export-create-object', {
  *    cancelable: true,
  *    composed: true,
  *    bubbles: true,
@@ -175,9 +169,9 @@ the License.
  *      kind: 'any-value'
  *    }
  *  });
- *  document.body.dispatchEvent(event);
- *  if (event.defaultPrevented) {
- *    console.log(event.detail.result);
+ *  document.body.dispatchEvent(e);
+ *  if (e.defaultPrevented) {
+ *    console.log(e.detail.result);
  *  }
  *  ```
  *
@@ -208,24 +202,65 @@ the License.
  *
  * #### event.detail.result
  *
+ * Promise, Resolved promise to export result object of the underlying export
+ * module (file, Drive).
+ *
+ * #### Example
+ *
+ * ```javascript
+ * const e = new CustomEvent('export-user-data', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      type: ['request', 'history'], // or type: 'all'
+ *      destination: 'file',
+ *      file: 'arc-data-export.arc'
+ *    }
+ *  });
+ *  document.body.dispatchEvent(e);
+ *  if (e.defaultPrevented) {
+ *    e.detail.result.then((data) => console.log(data));
+ * }
+ * ```
+ *
+ * ### `export-data-prepare` event
+ *
+ * Prepares data to export as with `export-user-data` event but does not trigger
+ * export event.
+ *
+ * #### Properties
+ *
+ * -   **type** See `export-user-data` for details
+ *
+ * #### event.detail.result
+ *
  * Promise, Resolved promise to the export object
  *
  * #### Example
  *
  * ```javascript
- * var event = new CustomEvent('export-user-data', {
+ * const e = new CustomEvent('export-data-prepare', {
  *    cancelable: true,
  *    composed: true,
  *    bubbles: true,
  *    detail: {
- *      type: ['request', 'history'] // or type: 'all'
+ *      type: ['all']
  *    }
  *  });
- *  document.body.dispatchEvent(event);
- *  if (event.defaultPrevented) {
- *    event.detail.result.then(data => console.log(data));
+ *  document.body.dispatchEvent(e);
+ *  if (e.defaultPrevented) {
+ *    e.detail.result.then((data) => console.log(data));
  * }
  * ```
+ *
+ * ## Changes in version 2
+ * - `export-data` event renamed to `export-file`
+ * - `google-drive-data-save` event renamed to `export-google-drive`
+ * - `export-user-data` event handler sets export data resutls (from a module
+ * that handles export) and not the actual data. Use `export-data-prepare`
+ * and corresponding module event instead.
+ *
  * @customElement
  * @polymer
  * @memberof LogicElements
@@ -256,6 +291,7 @@ class ArcDataExport extends Polymer.Element {
     this._requestsExportHandler = this._requestsExportHandler.bind(this);
     this._createObjectHandler = this._createObjectHandler.bind(this);
     this._prepareDataHandler = this._prepareDataHandler.bind(this);
+    this._exportDataHandler = this._exportDataHandler.bind(this);
   }
 
   connectedCallback() {
@@ -264,7 +300,8 @@ class ArcDataExport extends Polymer.Element {
     window.addEventListener('export-request', this._requestExportHandler);
     window.addEventListener('export-requests', this._requestsExportHandler);
     window.addEventListener('export-create-object', this._createObjectHandler);
-    window.addEventListener('export-user-data', this._prepareDataHandler);
+    window.addEventListener('export-user-data', this._exportDataHandler);
+    window.addEventListener('export-data-prepare', this._prepareDataHandler);
   }
 
   disconnectedCallback() {
@@ -273,7 +310,8 @@ class ArcDataExport extends Polymer.Element {
     window.removeEventListener('export-request', this._requestExportHandler);
     window.removeEventListener('export-requests', this._requestsExportHandler);
     window.removeEventListener('export-create-object', this._createObjectHandler);
-    window.removeEventListener('export-user-data', this._prepareDataHandler);
+    window.removeEventListener('export-user-data', this._exportDataHandler);
+    window.removeEventListener('export-data-prepare', this._prepareDataHandler);
   }
 
   /**
@@ -550,7 +588,7 @@ class ArcDataExport extends Polymer.Element {
     return Promise.all(promises)
     .then((result) => {
       const exportData = {};
-      result.forEach(data => {
+      result.forEach((data) => {
         exportData[databases[data.name]] = data.data;
       });
       return exportData;
@@ -580,7 +618,7 @@ class ArcDataExport extends Polymer.Element {
           if (response && response.rows && response.rows.length > 0) {
             options.startkey = response.rows[response.rows.length - 1].id;
             options.skip = 1;
-            let docs = response.rows.map(item => item.doc);
+            const docs = response.rows.map((item) => item.doc);
             result = result.concat(docs);
             return fetchNextPage();
           } else {
@@ -692,11 +730,9 @@ class ArcDataExport extends Polymer.Element {
     e.detail.result = this.createExportObject(opts);
   }
   /**
-   * Handler for the `export-user-data` event.
-   * It requires the `type` property to be set on the `detail` object.
-   * See description of `prepareExport(opts)` for more info.
+   * Handler for `export-data-prepare` custom event.
    *
-   * The hander cancels the event and stops its propagation.
+   * @param {CustomEvent} e
    */
   _prepareDataHandler(e) {
     if (e.defaultPrevented) {
@@ -713,13 +749,23 @@ class ArcDataExport extends Polymer.Element {
       type: type
     });
     e.detail.result = exportObject;
-    exportObject.then((result) => {
-      if (e.detail.noExport) {
-        return result;
-      }
-      return this._sendExport(result, e.detail.file, e.detail.destination)
-      .then(() => result);
-    });
+  }
+  /**
+   * Handler for the `export-user-data` event.
+   * It requires the `type` property to be set on the `detail` object.
+   * See description of `prepareExport(opts)` for more info.
+   *
+   * The hander cancels the event and stops its propagation.
+   *
+   * @param {CustomEvent} e
+   */
+  _exportDataHandler(e) {
+    if (e.defaultPrevented) {
+      return;
+    }
+    this._prepareDataHandler(e);
+    e.detail.result
+    .then((result) => this._sendExport(result, e.detail.file, e.detail.destination));
   }
   /**
    * Sends export event depending on `destination`
@@ -748,7 +794,7 @@ class ArcDataExport extends Polymer.Element {
    * @param {String} file File name
    */
   _exportFile(data, file) {
-    const e = new CustomEvent('export-data', {
+    const e = new CustomEvent('export-file', {
       cancelable: true,
       bubbles: true,
       composed: true,
@@ -771,7 +817,7 @@ class ArcDataExport extends Polymer.Element {
    * @param {String} file File name
    */
   _exportDrive(data, file) {
-    const e = new CustomEvent('google-drive-data-save', {
+    const e = new CustomEvent('export-google-drive', {
       cancelable: true,
       bubbles: true,
       composed: true,
@@ -787,7 +833,6 @@ class ArcDataExport extends Polymer.Element {
     }
     return e.detail.result;
   }
-
   /**
    * Fired when querying for hosting application version number.
    * The hosting application should handle this event by setting
@@ -798,10 +843,19 @@ class ArcDataExport extends Polymer.Element {
   /**
    * Fired when any element request to export data outside the application
    *
-   * @event export-data
+   * @event export-file
    * @param {Any} data The data to export. Can be any format. In most cases it
    * should be JSON.stringified and the `type` should be set to `application/json`.
    * @param {String} type Data content type.
+   * @param {String} file Export file name.
+   */
+  /**
+   * Dispatched when file data to be saved on Google Drive.
+   *
+   * @event export-google-drive
+   * @param {Any} data The data to export.
+   * @param {String} contentType Data content type.
+   * @param {String} file Export file name.
    */
 }
 window.customElements.define(ArcDataExport.is, ArcDataExport);

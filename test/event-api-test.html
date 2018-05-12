@@ -32,6 +32,26 @@
         return e;
       }
 
+      let fileExportHandler;
+      let driveExportHandler;
+      suiteSetup(() => {
+        fileExportHandler = function(e) {
+          e.preventDefault();
+          e.detail.result = Promise.resolve({});
+        };
+        window.addEventListener('export-file', fileExportHandler);
+        driveExportHandler = function(e) {
+          e.preventDefault();
+          e.detail.result = Promise.resolve({});
+        };
+        window.addEventListener('export-google-drive', driveExportHandler);
+      });
+
+      suiteTeardown(() => {
+        window.removeEventListener('export-file', fileExportHandler);
+        window.removeEventListener('export-google-drive', driveExportHandler);
+      });
+
       suite('export-user-data', function() {
         const sampleSzie = 100;
 
@@ -172,9 +192,9 @@
           });
         });
 
-        test('Fires export-data custom event', function() {
+        test('Fires export-file custom event', function() {
           const spy = sinon.spy();
-          element.addEventListener('export-data', spy);
+          element.addEventListener('export-file', spy);
           const e = fire('export-user-data', {
             type: 'all'
           });
@@ -184,9 +204,9 @@
           });
         });
 
-        test('export-data event contains export object', function() {
+        test('export-file event contains export object', function() {
           let eventData;
-          element.addEventListener('export-data', function(e) {
+          element.addEventListener('export-file', function(e) {
             eventData = e.detail;
           });
           const e = fire('export-user-data', {
@@ -202,9 +222,9 @@
           });
         });
 
-        test('Fires google-drive-data-save custom event', function() {
+        test('Fires export-google-drive custom event', function() {
           const spy = sinon.spy();
-          element.addEventListener('google-drive-data-save', spy);
+          element.addEventListener('export-google-drive', spy);
           const e = fire('export-user-data', {
             type: 'all',
             destination: 'drive'
@@ -215,10 +235,10 @@
           });
         });
 
-        test('google-drive-data-save event contains export object', function() {
+        test('export-google-drive event contains export object', function() {
           let eventData;
-          element.addEventListener('google-drive-data-save', function clb(e) {
-            element.removeEventListener('google-drive-data-save', clb);
+          element.addEventListener('export-google-drive', function clb(e) {
+            element.removeEventListener('export-google-drive', clb);
             eventData = e.detail;
           });
           const e = fire('export-user-data', {
@@ -273,16 +293,16 @@
           assert.typeOf(result.then, 'function');
         });
 
-        test('Fires export-data custom event', function() {
+        test('Fires export-file custom event', function() {
           const spy = sinon.spy();
-          element.addEventListener('export-data', spy);
+          element.addEventListener('export-file', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
         });
 
-        test('export-data contains project object', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+        test('export-file contains project object', function(done) {
+          element.addEventListener('export-file', function clb(e) {
+            element.removeEventListener('export-file', clb);
             const result = e.detail.data;
             assert.typeOf(result, 'object', 'result is an object');
             assert.typeOf(result.createdAt, 'string', 'createdAt is set');
@@ -294,8 +314,8 @@
         });
 
         test('Adds project to the projects listt', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+          element.addEventListener('export-file', function clb(e) {
+            element.removeEventListener('export-file', clb);
             const result = e.detail.data;
             assert.typeOf(result.projects, 'array', 'projects is an array');
             assert.lengthOf(result.projects, 1, 'projects contains one item');
@@ -305,8 +325,8 @@
         });
 
         test('Adds requests property', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+          element.addEventListener('export-file', function clb(e) {
+            element.removeEventListener('export-file', clb);
             const result = e.detail.data;
             assert.typeOf(result.requests, 'array', 'requests is an array');
             assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
@@ -316,8 +336,8 @@
         });
 
         test('Adds variables property', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+          element.addEventListener('export-file', function clb(e) {
+            element.removeEventListener('export-file', clb);
             const result = e.detail.data;
             assert.typeOf(result.variables, 'array', 'variables is an array');
             assert.isAbove(result.variables.length, 0, 'variables is not empty');
@@ -326,9 +346,9 @@
           fireProject();
         });
 
-        test('export-data contains meta data', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+        test('export-file contains meta data', function(done) {
+          element.addEventListener('export-file', function clb(e) {
+            element.removeEventListener('export-file', clb);
             assert.equal(e.detail.file, 'test-file');
             assert.equal(e.detail.type, 'application/json');
             done();
@@ -350,11 +370,11 @@
             e.preventDefault();
             e.detail.result = Promise.resolve({});
           };
-          window.addEventListener('export-data', callback);
+          window.addEventListener('export-file', callback);
         });
 
         suiteTeardown(function() {
-          window.removeEventListener('export-data', callback);
+          window.removeEventListener('export-file', callback);
         });
 
         setup(function() {
@@ -402,9 +422,9 @@
           });
         });
 
-        test('Fires export-data custom event', function() {
+        test('Fires export-file custom event', function() {
           const spy = sinon.spy();
-          element.addEventListener('export-data', spy);
+          element.addEventListener('export-file', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
         });
@@ -423,11 +443,11 @@
             e.preventDefault();
             e.detail.result = Promise.resolve({});
           };
-          window.addEventListener('export-data', callback);
+          window.addEventListener('export-file', callback);
         });
 
         suiteTeardown(function() {
-          window.removeEventListener('export-data', callback);
+          window.removeEventListener('export-file', callback);
         });
 
         setup(function() {
@@ -475,9 +495,9 @@
           });
         });
 
-        test('Fires export-data custom event', function() {
+        test('Fires export-file custom event', function() {
           const spy = sinon.spy();
-          element.addEventListener('export-data', spy);
+          element.addEventListener('export-file', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
         });
