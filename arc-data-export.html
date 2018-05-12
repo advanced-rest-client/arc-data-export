@@ -1,6 +1,6 @@
 <!--
 @license
-Copyright 2016 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -11,292 +11,293 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 -->
-<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../app-pouchdb/pouchdb.html">
-<!--
-An element to handle data export preparation for ARC.
-
-It gets requested data from the datastore and creates an export object or accept
-external data to create export object.
-
-Note, the export object has common for all export types. Use `kind` property
-to determine export content type.
-For example `export-project` object contains `projects` properties with single
-item in the array while kind `AllDataExport` may have zero or more objects in
-the array.
-
-## Event based API
-
-The element support event based API. By adding the element anywhere to the DOM
-it enables event listeners on the `window` object.
-
-All events are canceled and propagation is stopped.
-Also, all handled events contains a `result` property on the `detail` object
-added by the handler. It may contain the result object or promise that resolves
-to a result object (in case of async operation).
-
-### `export-project` event
-
-Creates an export object and fires `export-data` to export generated data.
-
-#### Properties
-
--   **project** (Object, required) Project object to export.
--   **requests** (Array, required) Requests list to export.
--   **variables** (Array, optional) List of variables to add to export.
-
-#### event.detail.result
-
-Object, export object
-
-#### Example
-
-```javascript
-var event = new CustomEvent('export-project', {
-  cancelable: true,
-  composed: true,
-  bubbles: true,
-  detail: {
-    project: {...},
-    requests: [...]
-  }
-});
-document.body.dispatchEvent(event);
-if (event.defaultPrevented) {
-  console.log(event.detail.result);
-}
-```
-
-### `export-request` event
-
-Creates an export object for a single request and fires `export-data` to export
-generated data.
-
-#### Properties
-
--   **request** (Object, required) Requests to export.
--   **variables** (Array, optional) List of variables to add to export.
-
-#### event.detail.result
-
-Object, export object
-
-#### Example
-
-```javascript
-var event = new CustomEvent('export-request', {
-  cancelable: true,
-  composed: true,
-  bubbles: true,
-  detail: {
-    request: {...},
-    variables: [...] // This is optional
-  }
-});
-document.body.dispatchEvent(event);
-if (event.defaultPrevented) {
-  console.log(event.detail.result);
-}
-```
-
-### `export-requests` event
-
-Creates an export object for a single request and fires `export-data` to export
-generated data.
-
-#### Properties
-
--   **requests** (Array, required) List of requests to export.
--   **variables** (Array, optional) List of variables to add to export.
-
-#### event.detail.result
-
-Object, export object
-
-#### Example
-
-```javascript
-var event = new CustomEvent('export-requests', {
-  cancelable: true,
-  composed: true,
-  bubbles: true,
-  detail: {
-    requests: [{...}],
-    variables: [...] // This is optional
-  }
-});
-document.body.dispatchEvent(event);
-if (event.defaultPrevented) {
-  console.log(event.detail.result);
-}
-```
-
-### `export-create-object` event
-
-Similar to events described above but creates an export object for
-any supported export data.
-
-Required `types` property on the `detail` object is a map od data to be exported.
-Supported keys are:
-
--   `requests` (Array) List of requests to export
--   `projects` (Array) List of projects to export
--   `history` (Array) List of history requests to export
--   `websocket-url-history` (Array) List of url history object for WS to export
--   `url-history` (Array) List of URL history objects to export
--   `variables` (Array) List of variables to export
--   `headers-sets` (Array) List of the headers sets objects to export
--   `auth-data` (Array) List of the auth data objects to export
--   `cookies` (Array) List of cookies to export
-
-#### Properties
-
--   **types** (Object, required) List of requests to export.
--   **kind** (String, optional) The `kind` property of the top export declaration. Default to `ARC#AllDataExport`
-
-#### event.detail.result
-
-Object, export object
-
-#### Example
-
-```javascript
-var event = new CustomEvent('export-create-object', {
-  cancelable: true,
-  composed: true,
-  bubbles: true,
-  detail: {
-    types: {
-      requests: [{...}],
-      projects: [{...}],
-      ...
-    },
-    kind: 'any-value'
-  }
-});
-document.body.dispatchEvent(event);
-if (event.defaultPrevented) {
-  console.log(event.detail.result);
-}
-```
-
-### `export-user-data` event
-
-Gets user data from the datastore and creates an export object. Fires the
-`export-data` event when the data are ready to be exported.
-
-Required `type` property on the `detail` object is a name of the data type
-or list of names of data types to export. Supported values are:
-
--   `saved` To export list of saved requests with projects
--   `history` To export list of history requests
--   `websocket` To export list of websocket URL history
--   `history-url` To export list of requests URL history
--   `variables` To export list of all variables`
--   `headers-sets` To export list of variables sets
--   `auth` To export authorization data stored for the requests
--   `cookies` (Array) To export all cookies data
-
-Special value of `all` exports all stored in local datastore data.
-
-#### Properties
-
--   **type** (String or Array of String, required) A data type name or list of data type names
--   **noExport** (Boolean, optional) If set it will not send `export-data` event.
--   **file** (String, optional) Suggested file name in the save file dialog.
-
-#### event.detail.result
-
-Promise, Resolved promise to the export object
-
-#### Example
-
-```javascript
-var event = new CustomEvent('export-user-data', {
-  cancelable: true,
-  composed: true,
-  bubbles: true,
-  detail: {
-    type: ['request', 'history'] // or type: 'all'
-  }
-});
-document.body.dispatchEvent(event);
-if (event.defaultPrevented) {
-  event.detail.result.then(data => console.log(data));
-}
-```
-
-@group Logic Elements
-@element arc-data-export
--->
 <script>
-Polymer({
-  is: 'arc-data-export',
-  /**
-   * Fired when querying for hosting application version number.
-   * The hosting application should handle this event by setting
-   * `version` property on event's `detail` object.
-   *
-   * @event app-version
-   */
-  /**
-   * Fired when any element request to export data outside the application
-   *
-   * @event export-data
-   * @param {Any} data The data to export. Can be any format. In most cases it
-   * should be JSON.stringified and the `type` should be set to `application/json`.
-   * @param {String} type Data content type.
-   */
-  properties: {
-    /**
-     * Hosting application version number. If not set it sends `app-version`
-     * custom event to query for the application version number.
-     */
-    appVersion: String,
-    /**
-     * A size of datastore read operation in one call.
-     */
-    dbChunk: {
-      type: Number,
-      value: 1000
-    }
-  },
+/**
+ * An element to handle data export preparation for ARC.
+ *
+ * It gets requested data from the datastore and creates an export object or accept
+ * external data to create export object.
+ *
+ * Note, the export object has common for all export types. Use `kind` property
+ * to determine export content type.
+ * For example `export-project` object contains `projects` properties with single
+ * item in the array while kind `AllDataExport` may have zero or more objects in
+ * the array.
+ *
+ * ## Event based API
+ *
+ * The element support event based API. By adding the element anywhere to the DOM
+ * it enables event listeners on the `window` object.
+ *
+ * All events are canceled and propagation is stopped.
+ * Also, all handled events contains a `result` property on the `detail` object
+ * added by the handler. It may contain the result object or promise that resolves
+ * to a result object (in case of async operation).
+ *
+ * ### `export-project` event
+ *
+ * Creates an export object and fires `export-data` to export generated data.
+ *
+ * #### Properties
+ *
+ * -   **project** (Object, required) Project object to export.
+ * -   **requests** (Array, required) Requests list to export.
+ * -   **variables** (Array, optional) List of variables to add to export.
+ *
+ * #### event.detail.result
+ *
+ * Object, export object
+ *
+ * #### Example
+ *
+ * ```javascript
+ * const e = new CustomEvent('export-project', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      project: {...},
+ *      requests: [...]
+ *    }
+ * });
+ * document.body.dispatchEvent(e);
+ * if (e.defaultPrevented) {
+ *    console.log(e.detail.result);
+ * }
+ * ```
+ *
+ * ### `export-request` event
+ *
+ * Creates an export object for a single request and fires `export-data` to export
+ * generated data.
+ *
+ * #### Properties
+ *
+ * -   **request** (Object, required) Requests to export.
+ * -   **variables** (Array, optional) List of variables to add to export.
+ *
+ * #### event.detail.result
+ *
+ * Object, export object
+ *
+ * #### Example
+ *
+ * ```javascript
+ * var event = new CustomEvent('export-request', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      request: {...},
+ *      variables: [...] // This is optional
+ *    }
+ *  });
+ *  document.body.dispatchEvent(event);
+ *  if (event.defaultPrevented) {
+ *    console.log(event.detail.result);
+ *  }
+ * ```
+ *
+ * ### `export-requests` event
+ *
+ * Creates an export object for a single request and fires `export-data` to export
+ * generated data.
+ *
+ * #### Properties
+ *
+ * -   **requests** (Array, required) List of requests to export.
+ * -   **variables** (Array, optional) List of variables to add to export.
+ *
+ * #### event.detail.result
+ *
+ * Object, export object
+ *
+ * #### Example
+ *
+ * ```javascript
+ * var event = new CustomEvent('export-requests', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      requests: [{...}],
+ *      variables: [...] // This is optional
+ *    }
+ *  });
+ *  document.body.dispatchEvent(event);
+ *  if (event.defaultPrevented) {
+ *    console.log(event.detail.result);
+ *  }
+ * ```
+ *
+ * ### `export-create-object` event
+ *
+ * Similar to events described above but creates an export object for
+ * any supported export data.
+ *
+ * Required `types` property on the `detail` object is a map od data to be exported.
+ * Supported keys are:
+ *
+ * -   `requests` (Array) List of requests to export
+ * -   `projects` (Array) List of projects to export
+ * -   `history` (Array) List of history requests to export
+ * -   `websocket-url-history` (Array) List of url history object for WS to export
+ * -   `url-history` (Array) List of URL history objects to export
+ * -   `variables` (Array) List of variables to export
+ * -   `headers-sets` (Array) List of the headers sets objects to export
+ * -   `auth-data` (Array) List of the auth data objects to export
+ * -   `cookies` (Array) List of cookies to export
+ *
+ * #### Properties
+ *
+ * -   **types** (Object, required) List of requests to export.
+ * -   **kind** (String, optional) The `kind` property of the top export declaration. Default to `ARC#AllDataExport`
+ *
+ * #### event.detail.result
+ *
+ * Object, export object
+ *
+ * #### Example
+ *
+ * ```javascript
+ * var event = new CustomEvent('export-create-object', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      types: {
+ *        requests: [{...}],
+ *        projects: [{...}],
+ *        ...
+ *      },
+ *      kind: 'any-value'
+ *    }
+ *  });
+ *  document.body.dispatchEvent(event);
+ *  if (event.defaultPrevented) {
+ *    console.log(event.detail.result);
+ *  }
+ *  ```
+ *
+ * ### `export-user-data` event
+ *
+ * Gets user data from the datastore and creates an export object. Fires the
+ * `export-data` event when the data are ready to be exported.
+ *
+ * Required `type` property on the `detail` object is a name of the data type
+ * or list of names of data types to export. Supported values are:
+ *
+ * -   `saved` To export list of saved requests with projects
+ * -   `history` To export list of history requests
+ * -   `websocket` To export list of websocket URL history
+ * -   `history-url` To export list of requests URL history
+ * -   `variables` To export list of all variables`
+ * -   `headers-sets` To export list of variables sets
+ * -   `auth` To export authorization data stored for the requests
+ * -   `cookies` (Array) To export all cookies data
+ *
+ * Special value of `all` exports all stored in local datastore data.
+ *
+ * #### Properties
+ *
+ * -   **type** (String or Array of String, required) A data type name or list of data type names
+ * -   **noExport** (Boolean, optional) If set it will not send `export-data` event.
+ * -   **file** (String, optional) Suggested file name in the save file dialog.
+ *
+ * #### event.detail.result
+ *
+ * Promise, Resolved promise to the export object
+ *
+ * #### Example
+ *
+ * ```javascript
+ * var event = new CustomEvent('export-user-data', {
+ *    cancelable: true,
+ *    composed: true,
+ *    bubbles: true,
+ *    detail: {
+ *      type: ['request', 'history'] // or type: 'all'
+ *    }
+ *  });
+ *  document.body.dispatchEvent(event);
+ *  if (event.defaultPrevented) {
+ *    event.detail.result.then(data => console.log(data));
+ * }
+ * ```
+ * @customElement
+ * @polymer
+ * @memberof LogicElements
+ */
+class ArcDataExport extends Polymer.Element {
+  static get is() { return 'arc-data-export'; }
+  static get properties() {
+    return {
+      /**
+       * Hosting application version number. If not set it sends `app-version`
+       * custom event to query for the application version number.
+       */
+      appVersion: String,
+      /**
+       * A size of datastore read operation in one call.
+       */
+      dbChunk: {
+        type: Number,
+        value: 1000
+      }
+    };
+  }
 
-  attached: function() {
-    this.listen(window, 'export-project', '_projectExportHandler');
-    this.listen(window, 'export-request', '_requestExportHandler');
-    this.listen(window, 'export-requests', '_requestsExportHandler');
-    this.listen(window, 'export-create-object', '_createObjectHandler');
-    this.listen(window, 'export-user-data', '_prepareDataHandler');
-  },
+  constructor() {
+    super();
+    this._projectExportHandler = this._projectExportHandler.bind(this);
+    this._requestExportHandler = this._requestExportHandler.bind(this);
+    this._requestsExportHandler = this._requestsExportHandler.bind(this);
+    this._createObjectHandler = this._createObjectHandler.bind(this);
+    this._prepareDataHandler = this._prepareDataHandler.bind(this);
+  }
 
-  detached: function() {
-    this.unlisten(window, 'export-project', '_projectExportHandler');
-    this.unlisten(window, 'export-request', '_requestExportHandler');
-    this.unlisten(window, 'export-requests', '_requestsExportHandler');
-    this.unlisten(window, 'export-create-object', '_createObjectHandler');
-    this.unlisten(window, 'export-user-data', '_prepareDataHandler');
-  },
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener('export-project', this._projectExportHandler);
+    window.addEventListener('export-request', this._requestExportHandler);
+    window.addEventListener('export-requests', this._requestsExportHandler);
+    window.addEventListener('export-create-object', this._createObjectHandler);
+    window.addEventListener('export-user-data', this._prepareDataHandler);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    window.removeEventListener('export-project', this._projectExportHandler);
+    window.removeEventListener('export-request', this._requestExportHandler);
+    window.removeEventListener('export-requests', this._requestsExportHandler);
+    window.removeEventListener('export-create-object', this._createObjectHandler);
+    window.removeEventListener('export-user-data', this._prepareDataHandler);
+  }
 
   /**
    * Fires `app-version` to ask the hosting app for its version number.
    * The hosting application should handle this event by setting
    * `version` property on event's `detail` object.
    */
-  queryAppVersion: function() {
+  queryAppVersion() {
     if (this.appVersion) {
       return this.appVersion;
     }
-    var event = this.fire('app-version', {}, {
+    const e = new CustomEvent('app-version', {
       cancelable: true,
-      composed: true
+      bubbles: true,
+      composed: true,
+      detail: {}
     });
-    if (event.detail.version) {
-      this.appVersion = event.detail.version;
-      return event.detail.version;
+    this.dispatchEvent(e);
+    if (e.detail.version) {
+      this.appVersion = e.detail.version;
+      return e.detail.version;
     }
     return 'unknown';
-  },
+  }
   /**
    * Creates an export object for the data.
    *
@@ -314,10 +315,10 @@ Polymer({
    *      Default to `ARC#AllDataExport`
    * @return {Object} ARC export object declaration.
    */
-  createExportObject: function(opts) {
+  createExportObject(opts) {
     opts = opts || {};
-    var appVersion = this.queryAppVersion();
-    var result = {
+    const appVersion = this.queryAppVersion();
+    const result = {
       createdAt: new Date().toISOString(),
       version: appVersion,
       kind: opts.kind || 'ARC#AllDataExport'
@@ -331,11 +332,11 @@ Polymer({
     if (opts.history && opts.history.length) {
       result.history = this._prepareHistoryDataList(opts.history);
     }
-    var wsHistory = opts['websocket-url-history'];
+    const wsHistory = opts['websocket-url-history'];
     if (wsHistory && wsHistory.length) {
       result['websocket-url-history'] = this._prepareWsUrlHistoryData(wsHistory);
     }
-    var urlHistory = opts['url-history'];
+    const urlHistory = opts['url-history'];
     if (urlHistory && urlHistory.length) {
       result['url-history'] = this._prepareUrlHistoryData(urlHistory);
     }
@@ -355,10 +356,10 @@ Polymer({
       result['host-rules'] = this._prepareHostRulesData(opts['host-rules']);
     }
     return result;
-  },
+  }
 
-  _prepareRequestsList: function(requests) {
-    var result = requests.map(item => {
+  _prepareRequestsList(requests) {
+    const result = requests.map((item) => {
       // to associate projects and requests during import.
       if (item.legacyProject) {
         item._referenceLegacyProject = item.legacyProject;
@@ -370,10 +371,10 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareProjectsList: function(projects) {
-    var result = projects.map(item => {
+  _prepareProjectsList(projects) {
+    const result = projects.map(item => {
       // to associate projects and requests during import.
       item._referenceId = item._id;
       delete item._rev;
@@ -382,20 +383,20 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareHistoryDataList: function(history) {
-    var result = history.map(item => {
+  _prepareHistoryDataList(history) {
+    const result = history.map((item) => {
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#HistoryData';
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareWsUrlHistoryData: function(history) {
-    var result = history.map(item => {
+  _prepareWsUrlHistoryData(history) {
+    const result = history.map(item => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
@@ -403,10 +404,10 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareUrlHistoryData: function(history) {
-    var result = history.map(item => {
+  _prepareUrlHistoryData(history) {
+    const result = history.map((item) => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
@@ -414,10 +415,11 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareVariablesData: function(variables) {
-    var result = variables.map(item => {
+  _prepareVariablesData(variables) {
+    const result = [];
+    variables.forEach((item) => {
       if (!item.environment) {
         // PouchDB creates some views in the main datastore and it is added to
         // get all docs function without any reason. It should be eleminated
@@ -427,14 +429,13 @@ Polymer({
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#Variable';
-      return item;
+      result.push(item);
     });
-    result = result.filter(item => !!item);
     return result;
-  },
+  }
 
-  _prepareHeadersSetsData: function(sets) {
-    var result = sets.map(item => {
+  _prepareHeadersSetsData(sets) {
+    const result = sets.map((item) => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
@@ -442,10 +443,10 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareAuthData: function(authData) {
-    var result = authData.map(item => {
+  _prepareAuthData(authData) {
+    const result = authData.map((item) => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
@@ -453,10 +454,10 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareCookieData: function(authData) {
-    var result = authData.map(item => {
+  _prepareCookieData(authData) {
+    const result = authData.map((item) => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
@@ -464,17 +465,17 @@ Polymer({
       return item;
     });
     return result;
-  },
+  }
 
-  _prepareHostRulesData: function(hostRules) {
-    return hostRules.map(item => {
+  _prepareHostRulesData(hostRules) {
+    return hostRules.map((item) => {
       item.key = item._id;
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#HostRule';
       return item;
     });
-  },
+  }
   /**
    * Checks if `type` is one of the allowed export types defined in
    * `exportType`.
@@ -484,12 +485,12 @@ Polymer({
    * @param {String} type An export type to test
    * @return {Boolean} True if the `type` is allowed
    */
-  _isAllowedExport: function(exportType, type) {
+  _isAllowedExport(exportType, type) {
     if (exportType instanceof Array) {
       return exportType.indexOf(type) !== -1;
     }
     return exportType === type || exportType === 'all';
-  },
+  }
   /**
    * Creats a map of database name <--> export object key name mapping.
    *
@@ -498,8 +499,8 @@ Polymer({
    * @return {Object} A map where keys are database name and values are
    * export object properties where the data will be put.
    */
-  _getDatabasesInfo: function(type) {
-    var databases = {};
+  _getDatabasesInfo(type) {
+    const databases = {};
     if (this._isAllowedExport(type, 'history')) {
       databases['history-requests'] = 'history';
     }
@@ -529,7 +530,7 @@ Polymer({
       databases['host-rules'] = 'host-rules';
     }
     return databases;
-  },
+  }
   /**
    * Prepares an export object from requested databases.
    *
@@ -538,24 +539,24 @@ Polymer({
    * @return {Promise} Resolved promise to ARC export object with all data
    * from requested databases.
    */
-  prepareExport: function(opts) {
+  prepareExport(opts) {
     opts = opts || {};
     if (!opts.type) {
       return Promise.reject(new Error('Type of export must be set.'));
     }
-    var databases = this._getDatabasesInfo(opts.type);
-    var promises = Object.keys(databases)
-    .map(dbName => this._getDatabaseEntries(dbName));
+    const databases = this._getDatabasesInfo(opts.type);
+    const promises = Object.keys(databases)
+    .map((dbName) => this._getDatabaseEntries(dbName));
     return Promise.all(promises)
-    .then(result => {
-      var exportData = {};
+    .then((result) => {
+      const exportData = {};
       result.forEach(data => {
         exportData[databases[data.name]] = data.data;
       });
       return exportData;
     })
-    .then(exportData => this.createExportObject(exportData));
-  },
+    .then((exportData) => this.createExportObject(exportData));
+  }
   /**
    * Returns all data from a database.
    *
@@ -563,15 +564,16 @@ Polymer({
    * @return {Promise} Resolved promise to array of objects. It always
    * resolves.
    */
-  _getDatabaseEntries: function(dbName) {
-    var options = {
+  _getDatabaseEntries(dbName) {
+    const options = {
       limit: this.dbChunk,
       // jscs:disable
       include_docs: true
       // jscs:enable
     };
-    var db = new PouchDB(dbName);
-    var result = [];
+    /* global PouchDB */
+    const db = new PouchDB(dbName);
+    let result = [];
     return new Promise((resolve) => {
       function fetchNextPage() {
         db.allDocs(options, function(err, response) {
@@ -591,7 +593,7 @@ Polymer({
       }
       fetchNextPage();
     });
-  },
+  }
   /**
    * Handler for the `export-project` custom event. Creates the export
    * object from the passed project and request list data in the event detail
@@ -599,14 +601,14 @@ Polymer({
    * export data. Also it sends `export-data` custom event to inform
    * application to export the data.
    */
-  _projectExportHandler: function(e) {
+  _projectExportHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
     e.preventDefault();
     e.stopPropagation();
 
-    var opts = {
+    const opts = {
       projects: [e.detail.project || {}],
       requests: e.detail.requests || [],
       kind: 'ARC#Project'
@@ -614,9 +616,9 @@ Polymer({
     if (e.detail.variables) {
       opts.variables = e.detail.variables;
     }
-    var exportObject = this.createExportObject(opts);
+    const exportObject = this.createExportObject(opts);
     e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination);
-  },
+  }
   /**
    * Handler for the `export-requests` custom event. Creates the export
    * object from the passed request list data in the event detail
@@ -624,36 +626,35 @@ Polymer({
    * export data. Also it sends `export-data` custom event to inform
    * application to export the data.
    */
-  _requestsExportHandler: function(e) {
+  _requestsExportHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
     e.preventDefault();
     e.stopPropagation();
-
-    var opts = {
+    const opts = {
       requests: e.detail.requests || [],
       kind: 'ARC#RequestsList'
     };
     if (e.detail.variables) {
       opts.variables = e.detail.variables;
     }
-    var exportObject = this.createExportObject(opts);
+    const exportObject = this.createExportObject(opts);
     e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination)
     .then(() => exportObject);
-  },
+  }
   /**
    * Exports a single request. Creates an export object for a single request
    * with relevant settings.
    */
-  _requestExportHandler: function(e) {
+  _requestExportHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
     e.preventDefault();
     e.stopPropagation();
 
-    var opts = {
+    const opts = {
       kind: 'ARC#Request'
     };
     if (e.detail.request) {
@@ -662,10 +663,10 @@ Polymer({
     if (e.detail.variables) {
       opts.variables = e.detail.variables;
     }
-    var exportObject = this.createExportObject(opts);
+    const exportObject = this.createExportObject(opts);
     e.detail.result = this._sendExport(exportObject, e.detail.file, e.detail.destination)
     .then(() => exportObject);
-  },
+  }
   /**
    * Handler for the `export-create-object` event.
    * It requires the `types` object to be set on the `detail` object.
@@ -673,7 +674,7 @@ Polymer({
    *
    * The hander cancels the event and stops its propagation.
    */
-  _createObjectHandler: function(e) {
+  _createObjectHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
@@ -684,12 +685,12 @@ Polymer({
       e.detail.result = Promise.reject(new Error('Types are required'));
       return;
     }
-    var opts = Object.assign({}, e.detail.types);
+    const opts = Object.assign({}, e.detail.types);
     if (e.detail.kind) {
       opts.kind = e.detail.kind;
     }
     e.detail.result = this.createExportObject(opts);
-  },
+  }
   /**
    * Handler for the `export-user-data` event.
    * It requires the `type` property to be set on the `detail` object.
@@ -697,29 +698,29 @@ Polymer({
    *
    * The hander cancels the event and stops its propagation.
    */
-  _prepareDataHandler: function(e) {
+  _prepareDataHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
     e.preventDefault();
     e.stopPropagation();
-    var type = e.detail.type;
+    const type = e.detail.type;
     if (!type) {
       e.detail.result = Promise.reject(new Error('Type is required'));
       return;
     }
-    var exportObject = this.prepareExport({
+    const exportObject = this.prepareExport({
       type: type
     });
     e.detail.result = exportObject;
-    exportObject.then(result => {
+    exportObject.then((result) => {
       if (e.detail.noExport) {
         return result;
       }
       return this._sendExport(result, e.detail.file, e.detail.destination)
       .then(() => result);
     });
-  },
+  }
   /**
    * Sends export event depending on `destination`
    *
@@ -729,7 +730,7 @@ Polymer({
    * supported. Default to file.
    * @return {Promise} A promise resolved when data are expored.
    */
-  _sendExport: function(data, filename, destination) {
+  _sendExport(data, filename, destination) {
     destination = destination || 'file';
     filename = filename || 'arc-data-export.json';
     let promise;
@@ -739,46 +740,69 @@ Polymer({
       promise = this._exportFile(data, filename);
     }
     return promise;
-  },
-
+  }
   /**
    * Requests application to export data to file.
    *
    * @param {Object|String} data Data to export
    * @param {String} file File name
    */
-  _exportFile: function(data, file) {
-    var event = this.fire('export-data', {
-      data: data,
-      type: 'application/json',
-      file: file
-    }, {
-      cancelable: true
+  _exportFile(data, file) {
+    const e = new CustomEvent('export-data', {
+      cancelable: true,
+      bubbles: true,
+      composed: true,
+      detail: {
+        data: data,
+        type: 'application/json',
+        file: file
+      }
     });
-    if (!event.defaultPrevented) {
+    this.dispatchEvent(e);
+    if (!e.defaultPrevented) {
       return Promise.reject(new Error('File export module not found.'));
     }
-    return event.detail.result;
-  },
-
+    return e.detail.result;
+  }
   /**
    * Requests application to export data to Google Drive.
    *
    * @param {Object|String} data Data to export
    * @param {String} file File name
    */
-  _exportDrive: function(data, file) {
-    var event = this.fire('google-drive-data-save', {
-      content: data,
-      contentType: 'application/json',
-      file: file
-    }, {
-      cancelable: true
+  _exportDrive(data, file) {
+    const e = new CustomEvent('google-drive-data-save', {
+      cancelable: true,
+      bubbles: true,
+      composed: true,
+      detail: {
+        content: data,
+        contentType: 'application/json',
+        file: file
+      }
     });
-    if (!event.defaultPrevented) {
+    this.dispatchEvent(e);
+    if (!e.defaultPrevented) {
       return Promise.reject(new Error('Google Drive export module not found.'));
     }
-    return event.detail.result;
+    return e.detail.result;
   }
-});
+
+  /**
+   * Fired when querying for hosting application version number.
+   * The hosting application should handle this event by setting
+   * `version` property on event's `detail` object.
+   *
+   * @event app-version
+   */
+  /**
+   * Fired when any element request to export data outside the application
+   *
+   * @event export-data
+   * @param {Any} data The data to export. Can be any format. In most cases it
+   * should be JSON.stringified and the `type` should be set to `application/json`.
+   * @param {String} type Data content type.
+   */
+}
+window.customElements.define(ArcDataExport.is, ArcDataExport);
 </script>

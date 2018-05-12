@@ -1,22 +1,10 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <script src="../../iron-test-helpers/mock-interactions.js"></script>
     <script src="data-generator.js"></script>
     <script src="../../chance/dist/chance.min.js"></script>
     <link rel="import" href="../arc-data-export.html">
@@ -34,14 +22,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     suite('Querying for data - events API', function() {
 
       function fire(type, detail, node) {
-        var event = new CustomEvent(type, {
+        const e = new CustomEvent(type, {
           detail: detail,
           bubbles: true,
           composed: true,
           cancelable: true
         });
-        (node || document.body).dispatchEvent(event);
-        return event;
+        (node || document.body).dispatchEvent(e);
+        return e;
       }
 
       suite('export-user-data', function() {
@@ -56,18 +44,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           return DataGenerator.destroyData();
         });
 
-        var element;
+        let element;
         setup(function() {
           element = fixture('basic');
         });
 
         test('Creates an export object', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'saved'
           });
           assert.isTrue(e.defaultPrevented);
           return e.detail.result
-          .then(result => {
+          .then((result) => {
             assert.typeOf(result, 'object', 'result is an object');
             assert.typeOf(result.createdAt, 'string', 'createdAt is set');
             assert.equal(result.kind, 'ARC#AllDataExport', 'Kind is set');
@@ -76,7 +64,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates saved data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'saved'
           });
           return e.detail.result
@@ -90,7 +78,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates history data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'history'
           });
           return e.detail.result
@@ -101,7 +89,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates websocket URL history data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'websocket'
           });
           return e.detail.result
@@ -112,7 +100,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates URL history data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'history-url'
           });
           return e.detail.result
@@ -123,7 +111,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates variables data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'variables'
           });
           return e.detail.result
@@ -134,7 +122,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates headers-sets data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'headers-sets'
           });
           return e.detail.result
@@ -145,7 +133,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates cookies data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'cookies'
           });
           return e.detail.result
@@ -156,7 +144,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates headers-sets data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'auth'
           });
           return e.detail.result
@@ -167,7 +155,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Creates full data export', function() {
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'all'
           });
           return e.detail.result
@@ -185,9 +173,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
+          const spy = sinon.spy();
           element.addEventListener('export-data', spy);
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'all'
           });
           return e.detail.result
@@ -197,11 +185,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('export-data event contains export object', function() {
-          var eventData;
+          let eventData;
           element.addEventListener('export-data', function(e) {
             eventData = e.detail;
           });
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'all'
           });
           return e.detail.result
@@ -215,9 +203,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Fires google-drive-data-save custom event', function() {
-          var spy = sinon.spy();
+          const spy = sinon.spy();
           element.addEventListener('google-drive-data-save', spy);
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'all',
             destination: 'drive'
           });
@@ -228,12 +216,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('google-drive-data-save event contains export object', function() {
-          var eventData;
+          let eventData;
           element.addEventListener('google-drive-data-save', function clb(e) {
             element.removeEventListener('google-drive-data-save', clb);
             eventData = e.detail;
           });
-          var e = fire('export-user-data', {
+          const e = fire('export-user-data', {
             type: 'all',
             destination: 'drive'
           });
@@ -248,10 +236,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('export-project', function() {
-        var element;
-        var project;
-        var requests;
-        var variables;
+        let element;
+        let project;
+        let requests;
+        let variables;
 
         suiteSetup(function() {
           this.timeout(20000);
@@ -275,18 +263,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         test('Event is canceled', function() {
-          var e = fireProject();
+          const e = fireProject();
           assert.isTrue(e.defaultPrevented);
         });
 
         test('Returns a promise', function() {
-          var e = fireProject();
-          var result = e.detail.result;
+          const e = fireProject();
+          const result = e.detail.result;
           assert.typeOf(result.then, 'function');
         });
 
         test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
+          const spy = sinon.spy();
           element.addEventListener('export-data', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
@@ -295,7 +283,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('export-data contains project object', function(done) {
           element.addEventListener('export-data', function clb(e) {
             element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
+            const result = e.detail.data;
             assert.typeOf(result, 'object', 'result is an object');
             assert.typeOf(result.createdAt, 'string', 'createdAt is set');
             assert.equal(result.kind, 'ARC#Project', 'Kind is set');
@@ -308,7 +296,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('Adds project to the projects listt', function(done) {
           element.addEventListener('export-data', function clb(e) {
             element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
+            const result = e.detail.data;
             assert.typeOf(result.projects, 'array', 'projects is an array');
             assert.lengthOf(result.projects, 1, 'projects contains one item');
             done();
@@ -319,7 +307,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('Adds requests property', function(done) {
           element.addEventListener('export-data', function clb(e) {
             element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
+            const result = e.detail.data;
             assert.typeOf(result.requests, 'array', 'requests is an array');
             assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
             done();
@@ -330,7 +318,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         test('Adds variables property', function(done) {
           element.addEventListener('export-data', function clb(e) {
             element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
+            const result = e.detail.data;
             assert.typeOf(result.variables, 'array', 'variables is an array');
             assert.isAbove(result.variables.length, 0, 'variables is not empty');
             done();
@@ -350,10 +338,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('export-request', function() {
-        var element;
-        var request;
-        var variables;
-        var callback;
+        let element;
+        let request;
+        let variables;
+        let callback;
 
         suiteSetup(function() {
           request = DataGenerator.generateRequests(undefined, 1)[0];
@@ -381,14 +369,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         test('Event is canceled', function() {
-          var e = fireProject();
+          const e = fireProject();
           assert.isTrue(e.defaultPrevented);
         });
 
         test('Creates export object', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
-          .then(result => {
+          .then((result) => {
             assert.typeOf(result, 'object', 'result is an object');
             assert.typeOf(result.createdAt, 'string', 'createdAt is set');
             assert.equal(result.kind, 'ARC#Request', 'Kind is set');
@@ -397,25 +385,25 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Adds request property', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
-          .then(result => {
+          .then((result) => {
             assert.typeOf(result.requests, 'array', 'requests is an array');
             assert.lengthOf(result.requests, 1, 'requests contains one item');
           });
         });
 
         test('Adds variables property', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
-          .then(result => {
+          .then((result) => {
             assert.typeOf(result.variables, 'array', 'variables is an array');
             assert.isAbove(result.variables.length, 0, 'variables is not empty');
           });
         });
 
         test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
+          const spy = sinon.spy();
           element.addEventListener('export-data', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
@@ -423,10 +411,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('export-requests', function() {
-        var element;
-        var requests;
-        var variables;
-        var callback;
+        let element;
+        let requests;
+        let variables;
+        let callback;
         suiteSetup(function() {
           this.timeout(20000);
           requests = DataGenerator.generateRequests(undefined, 2000);
@@ -454,12 +442,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         test('Event is canceled', function() {
-          var e = fireProject();
+          const e = fireProject();
           assert.isTrue(e.defaultPrevented);
         });
 
         test('Creates export object', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
           .then(result => {
             assert.typeOf(result, 'object', 'result is an object');
@@ -470,7 +458,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Adds requests property', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
           .then(result => {
             assert.typeOf(result.requests, 'array', 'requests is an array');
@@ -479,7 +467,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Adds variables property', function() {
-          var e = fireProject();
+          const e = fireProject();
           return e.detail.result
           .then(result => {
             assert.typeOf(result.variables, 'array', 'variables is an array');
@@ -488,7 +476,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
+          const spy = sinon.spy();
           element.addEventListener('export-data', spy);
           fireProject();
           assert.isTrue(spy.calledOnce);
@@ -496,11 +484,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('export-create-object', function() {
-        var element;
-        var requests;
-        var variables;
-        var project;
-        var cookies;
+        let element;
+        let requests;
+        let variables;
+        let project;
+        let cookies;
         const kind = 'ARC#TEST';
         suiteSetup(function() {
           this.timeout(20000);
@@ -527,13 +515,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         }
 
         test('Event is canceled', function() {
-          var e = fireExport();
+          const e = fireExport();
           assert.isTrue(e.defaultPrevented);
         });
 
         test('Creates export object', function() {
-          var e = fireExport();
-          var result = e.detail.result;
+          const e = fireExport();
+          const result = e.detail.result;
           assert.typeOf(result, 'object', 'result is an object');
           assert.typeOf(result.createdAt, 'string', 'createdAt is set');
           assert.equal(result.kind, kind, 'Kind is set');
@@ -541,29 +529,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Adds requests property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
+          const e = fireExport();
+          const result = e.detail.result;
           assert.typeOf(result.requests, 'array', 'requests is an array');
           assert.lengthOf(result.requests, 2000, 'requests is not empty');
         });
 
         test('Adds variables property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
+          const e = fireExport();
+          const result = e.detail.result;
           assert.typeOf(result.variables, 'array', 'variables is an array');
           assert.isAbove(result.variables.length, 0, 'variables is not empty');
         });
 
         test('Adds projects property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
+          const e = fireExport();
+          const result = e.detail.result;
           assert.typeOf(result.projects, 'array', 'projects is an array');
           assert.lengthOf(result.projects, 1, 'projects has one item');
         });
 
         test('Adds cookies property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
+          const e = fireExport();
+          const result = e.detail.result;
           assert.typeOf(result.cookies, 'array', 'cookies is an array');
           assert.lengthOf(result.cookies, 25, 'cookies has all items');
         });
