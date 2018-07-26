@@ -12,21 +12,20 @@ License for the specific language governing permissions and limitations under
 the License.
 -->
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../app-pouchdb/pouchdb.html">
 <script>
 /**
  * An element to handle data export preparation for ARC.
  *
- * It gets requested data from the datastore and creates an export object or accept
- * external data to create export object.
+ * It gets requested data from the datastore and creates an export object or
+ * accept external data to create export object.
  *
  * It does not include any logic related to actual data export (to file or
  * to drive) as implementation may be different depending on the plaform.
  *
  * ## Event based API
  *
- * The element supports event based API. When adding the element anywhere to the DOM
- * it attaches event listeners on the `window` object.
+ * The element supports event based API. When adding the element anywhere to
+ * the DOM it attaches event listeners on the `window` object.
  *
  * All events are canceled and the propagation is stopped.
  *
@@ -147,7 +146,8 @@ the License.
  * #### Properties
  *
  * -   **types** (Object, required) List of requests to export.
- * -   **kind** (String, optional) The `kind` property of the top export declaration. Default to `ARC#AllDataExport`
+ * -   **kind** (String, optional) The `kind` property of the top export
+ * declaration. Default to `ARC#AllDataExport`
  *
  * #### event.detail.result
  *
@@ -196,7 +196,8 @@ the License.
  *
  * #### Properties
  *
- * -   **type** (String or Array of String, required) A data type name or list of data type names
+ * -   **type** (String or Array of String, required) A data type name or list
+ * of data type names
  * -   **noExport** (Boolean, optional) If set it will not send `export-data` event.
  * -   **file** (String, optional) Suggested file name in the save file dialog.
  *
@@ -260,6 +261,8 @@ the License.
  * - `export-user-data` event handler sets export data resutls (from a module
  * that handles export) and not the actual data. Use `export-data-prepare`
  * and corresponding module event instead.
+ * - PouchDB is no longer included into the element. Use whatever version you
+ * want (npm, bower, local, etc)
  *
  * @customElement
  * @polymer

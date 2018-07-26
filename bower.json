@@ -17,8 +17,7 @@
     "url": "git@github.com:advanced-rest-client/arc-data-export.git"
   },
   "dependencies": {
-    "polymer": "Polymer/polymer#^2.0.0",
-    "app-pouchdb": "PolymerElements/app-pouchdb#^2.1.1"
+    "polymer": "Polymer/polymer#^2.0.0"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^3.0.1",
@@ -26,7 +25,8 @@
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
     "iron-test-helpers": "PolymerElements/iron-test-helpers#^2.0.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
-    "chance": "^1.0.11"
+    "chance": "^1.0.11",
+    "app-pouchdb": "PolymerElements/app-pouchdb#^2.1.1"
   },
   "ignore": [
     "**/.*",
