@@ -1,10 +1,9 @@
 {
-  "name": "arc-data-export",
+  "name": "@advanced-rest-client/arc-data-export",
   "version": "2.0.0-preview",
   "license": "Apache-2.0",
   "description": "An element to handle data export preparation for ARC",
   "devDependencies": {
-    "bower": "^1.8.0",
     "@polymer/gen-typescript-declarations": "^1.1.1"
   },
   "private": false,
