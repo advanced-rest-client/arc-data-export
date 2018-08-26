@@ -5,29 +5,32 @@
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
     <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <link rel="import" href="../../app-pouchdb/pouchdb.html">
-    <script src="data-generator.js"></script>
     <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../../app-pouchdb/pouchdb.html">
+    <link rel="import" href="../../arc-data-generator/arc-data-generator.html">
     <link rel="import" href="../arc-data-export.html">
   </head>
   <body>
 
-    <test-fixture id="basic">
+    <test-fixture id="Basic">
       <template>
         <arc-data-export></arc-data-export>
       </template>
     </test-fixture>
 
     <script>
-    /* global fixture, assert, DataGenerator */
-    suite('basic', function() {
-
+    /* global DataGenerator, chance */
+    suite('Basic', function() {
+      function mockRev(data) {
+        return data.map((item) => {
+          item._rev = chance.string();
+          return item;
+        });
+      }
       let element;
-
       suite('_isAllowedExport()', function() {
-
         setup(function() {
-          element = fixture('basic');
+          element = fixture('Basic');
         });
 
         test('Passes test for equal string attributes', function() {
@@ -41,12 +44,12 @@
         });
 
         test('Passes test if type is in array', function() {
-          const result = element._isAllowedExport(['a','b','c'], 'a');
+          const result = element._isAllowedExport(['a', 'b', 'c'], 'a');
           assert.isTrue(result);
         });
 
         test('Do not passes test if type is not in array', function() {
-          const result = element._isAllowedExport(['a','b','c'], 'd');
+          const result = element._isAllowedExport(['a', 'b', 'c'], 'd');
           assert.isFalse(result);
         });
 
@@ -57,9 +60,8 @@
       });
 
       suite('_getDatabasesInfo()', function() {
-
         setup(function() {
-          element = fixture('basic');
+          element = fixture('Basic');
         });
 
         test('Returns empty object for not defined type', function() {
@@ -83,7 +85,7 @@
         test('Returns mapping for defined data types', function() {
           const types = [
             'history',
-            'history-url',
+            'url-history',
             'websocket',
             'variables',
             'headers-sets',
@@ -105,20 +107,27 @@
       });
 
       suite('_prepareRequestsList()', function() {
-        let result;
+        let data;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateRequests('test', 5000);
-          data = DataGenerator.mockRev(data);
-          result = element._prepareRequestsList(data);
+          element = fixture('Basic');
+          const projects = DataGenerator.generateProjects({
+            projectsSize: 20
+          });
+          data = DataGenerator.generateRequests({
+            requestsSize: 20,
+            projects: projects
+          });
+          data = mockRev(data);
         });
 
         test('Result is an array', function() {
+          const result = element._prepareRequestsList(data);
           assert.typeOf(result, 'array');
         });
 
         test('_rev and _id is removed', function() {
+          const result = element._prepareRequestsList(data);
           for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
@@ -126,49 +135,55 @@
             if (result[i]._rev) {
               throw new Error('_rev is set');
             }
+          }
+        });
+
+        test('key is set', function() {
+          const result = element._prepareRequestsList(data);
+          for (let i = 0, len = result.length; i < len; i++) {
+            assert.typeOf(result[i].key, 'string');
           }
         });
 
         test('legacyProject is removed', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i].legacyProject) {
-              throw new Error('_id is set');
-            }
-          }
+          data[0].legacyProject = 'abc';
+          delete data[0].projects;
+          const result = element._prepareRequestsList(data);
+          assert.isUndefined(result[0].legacyProject);
+        });
+
+        test('Adds legacyProject to projects', function() {
+          data[0].legacyProject = 'abc';
+          delete data[0].projects;
+          const result = element._prepareRequestsList(data);
+          assert.typeOf(result[0].projects, 'array');
+          assert.equal(result[0].projects[0], 'abc');
         });
 
         test('kind property is set', function() {
+          const result = element._prepareRequestsList(data);
           assert.equal(result[0].kind, 'ARC#RequestData');
-        });
-
-        test('Has _referenceLegacyProject set', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._referenceLegacyProject) {
-              return;
-            }
-          }
-          throw new Error('_referenceLegacyProject is not set');
         });
       });
 
       suite('_prepareProjectsList()', function() {
-        let result;
+        let data;
 
         setup(function() {
-          element = fixture('basic');
-          let data = [];
-          for (let i = 0; i < 100; i++) {
-            data.push(DataGenerator.createProjectObject());
-          }
-          data = DataGenerator.mockRev(data);
-          result = element._prepareProjectsList(data);
+          element = fixture('Basic');
+          data = DataGenerator.generateProjects({
+            projectsSize: 5
+          });
+          data = mockRev(data);
         });
 
         test('Result is an array', function() {
+          const result = element._prepareProjectsList(data);
           assert.typeOf(result, 'array');
         });
 
         test('_rev and _id is removed', function() {
+          const result = element._prepareProjectsList(data);
           for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
@@ -179,15 +194,18 @@
           }
         });
 
-        test('_referenceId is set', function() {
+        test('key is set', function() {
+          const ids = data.map((item) => item._id);
+          const result = element._prepareProjectsList(data);
           for (let i = 0, len = result.length; i < len; i++) {
-            if (!result[i]._referenceId) {
-              throw new Error('_referenceId is not set');
+            if (result[i].key !== ids[i]) {
+              throw new Error('Key is not set');
             }
           }
         });
 
         test('kind property is set', function() {
+          const result = element._prepareProjectsList(data);
           assert.equal(result[0].kind, 'ARC#ProjectData');
         });
       });
@@ -196,9 +214,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateHistory();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateHistoryRequestsData();
+          data = mockRev(data);
           result = element._prepareHistoryDataList(data);
         });
 
@@ -226,9 +244,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateVariables();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateVariablesData();
+          data = mockRev(data);
           result = element._prepareVariablesData(data);
         });
 
@@ -262,9 +280,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateHeadersSets();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateHeadersSetsData();
+          data = mockRev(data);
           result = element._prepareHeadersSetsData(data);
         });
 
@@ -298,9 +316,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateUrls();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateUrlsData();
+          data = mockRev(data);
           result = element._prepareWsUrlHistoryData(data);
         });
 
@@ -331,9 +349,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateUrls();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateUrlsData();
+          data = mockRev(data);
           result = element._prepareUrlHistoryData(data);
         });
 
@@ -364,9 +382,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateAuthData();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateBasicAuthData();
+          data = mockRev(data);
           result = element._prepareAuthData(data);
         });
 
@@ -397,9 +415,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
-          let data = DataGenerator.generateCookies();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateCookiesData();
+          data = mockRev(data);
           result = element._prepareCookieData(data);
         });
 
@@ -430,9 +448,9 @@
         let result;
 
         setup(function() {
-          element = fixture('basic');
+          element = fixture('Basic');
           let data = DataGenerator.generateHostRulesData();
-          data = DataGenerator.mockRev(data);
+          data = mockRev(data);
           result = element._prepareHostRulesData(data);
         });
 
@@ -461,36 +479,26 @@
 
       suite('createExportObject', function() {
         let opts = {};
-        let clb;
-
-        suiteSetup(function() {
-          clb = function(e) {
-            e.detail.version = 'test-version';
-            e.preventDefault();
-          };
-          window.addEventListener('app-version', clb);
-        });
-
-        suiteTeardown(function() {
-          window.removeEventListener('app-version', clb);
-        });
 
         setup(function() {
-          element = fixture('basic');
-          opts.cookies = DataGenerator.mockRev(DataGenerator.generateCookies());
-          opts['auth-data'] = DataGenerator.mockRev(DataGenerator.generateAuthData());
-          opts['url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
-          opts['websocket-url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
-          opts['headers-sets'] = DataGenerator.mockRev(DataGenerator.generateHeadersSets());
-          opts.variables = DataGenerator.mockRev(DataGenerator.generateVariables());
-          opts.history = DataGenerator.mockRev(DataGenerator.generateHistory());
-          opts['host-rules'] = DataGenerator.mockRev(DataGenerator.generateHostRulesData());
-          const projects = [];
-          for (let i = 0; i < 100; i++) {
-            projects.push(DataGenerator.createProjectObject());
-          }
-          opts.projects = DataGenerator.mockRev(projects);
-          opts.requests = DataGenerator.mockRev(DataGenerator.generateRequests('test', 100));
+          element = fixture('Basic');
+          opts.cookies = mockRev(DataGenerator.generateCookiesData());
+          opts['auth-data'] = mockRev(DataGenerator.generateBasicAuthData());
+          opts['url-history'] = mockRev(DataGenerator.generateUrlsData());
+          opts['websocket-url-history'] = mockRev(DataGenerator.generateUrlsData());
+          opts['headers-sets'] = mockRev(DataGenerator.generateHeadersSetsData());
+          opts.variables = mockRev(DataGenerator.generateVariablesData());
+          opts.history = mockRev(DataGenerator.generateHistoryRequestsData());
+          opts['host-rules'] = mockRev(DataGenerator.generateHostRulesData());
+          const projects = DataGenerator.generateProjects({
+            projectsSize: 20
+          });
+          const requests = DataGenerator.generateRequests({
+            requestsSize: 20,
+            projects: projects
+          });
+          opts.projects = mockRev(projects);
+          opts.requests = mockRev(requests);
         });
 
         test('Sets createdAt property', function() {
@@ -498,7 +506,13 @@
           assert.typeOf(result.createdAt, 'string');
         });
 
-        test('Version is set', function() {
+        test('Default version is set', function() {
+          const result = element.createExportObject(opts);
+          assert.equal(result.version, 'unknown');
+        });
+
+        test('Sets version from attribute', function() {
+          element.appVersion = 'test-version';
           const result = element.createExportObject(opts);
           assert.equal(result.version, 'test-version');
         });
@@ -573,9 +587,7 @@
           assert.isUndefined(result['host-rules'][0]._rew, 'Array was processed');
         });
       });
-
     });
     </script>
-
   </body>
 </html>
