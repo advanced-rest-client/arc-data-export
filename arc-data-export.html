@@ -208,7 +208,7 @@ class ArcDataExport extends Polymer.Element {
       detail: {}
     });
     this.dispatchEvent(e);
-    if (!e.defaultPrevented()) {
+    if (!e.defaultPrevented) {
       console.error('electron-session-state module not active');
       return Promise.resolve([]);
     }
