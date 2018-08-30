@@ -115,6 +115,7 @@ class ArcDataExport extends Polymer.Element {
     const promises = [];
     if (this.electronCookies && 'cookies' in databases) {
       promises.push(this._queryCookies());
+      delete databases.cookies;
     }
     Object.keys(databases).forEach((name) => {
       promises.push(this._getDatabaseEntries(name));
@@ -122,6 +123,9 @@ class ArcDataExport extends Polymer.Element {
     return Promise.all(promises)
     .then((result) => {
       result.forEach((data) => {
+        if (data.name === 'cookies' && this.electronCookies) {
+          databases.cookies = 'cookies';
+        }
         exportData[databases[data.name]] = data.data;
       });
       return exportData;
@@ -212,7 +216,13 @@ class ArcDataExport extends Polymer.Element {
       console.error('electron-session-state module not active');
       return Promise.resolve([]);
     }
-    return e.detail.result;
+    return e.detail.result
+    .then((data) => {
+      return {
+        name: 'cookies',
+        data
+      };
+    });
   }
 
   _prepareRequestsList(requests) {
