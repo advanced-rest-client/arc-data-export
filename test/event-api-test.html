@@ -113,6 +113,33 @@
           .catch((cause) => done(cause));
         });
 
+        test('Creates export object with existing data', function(done) {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
+            const data = e.detail.content;
+            assert.typeOf(data.history, 'array');
+            assert.lengthOf(data.history, 1);
+            done();
+          });
+          const e = fire({
+            type: 'items-export',
+            destination: 'file',
+            file: 'arc-history-export.json',
+            kind: 'ARC#HistoryExport',
+            items: {
+              history: [{
+                _id: 'test',
+                url: 'https://domain.com',
+                type: 'history',
+                headers: 'x-a: b',
+                method: 'GET'
+              }]
+            }
+          });
+          e.detail.result
+          .catch((cause) => done(cause));
+        });
+
         test('Exports data to Drive', function(done) {
           waitUntilDriveEvent((e) => {
             e.preventDefault();

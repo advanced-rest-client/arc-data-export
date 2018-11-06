@@ -68,6 +68,9 @@ class ArcDataExport extends Polymer.Element {
       case 'arc-export':
         result = this.arcExport(e.detail);
         break;
+      case 'items-export':
+        result = this.itemsExport(e.detail);
+        break;
       default:
         result = this.dataExport(e.detail);
         break;
@@ -138,6 +141,32 @@ class ArcDataExport extends Polymer.Element {
         default: return Promise.reject(new Error(`Unknown destination ${destination}`));
       }
     });
+  }
+  /**
+   * Exports data that are already retreived from the datastore.
+   * It calls `createExportObject` to prepare arc export object so the `items`
+   * object set on the `opts` has to have the same structure as the function's
+   * only argument.
+   * @param {Object} opts Export options:
+   * - `file` (String) Optional. Export file name.
+   * - `destination` (String) `drive` or `file`.
+   * - `items` (Object) The same structore as `opts` argument for `createExportObject()`
+   * - `kind` (String) Opional. Export item kind property.
+   * @return {Promise}
+   */
+  itemsExport(opts) {
+    const file = opts.file || 'arc-data-export.json';
+    const destination = opts.destination;
+    const items = opts.items;
+    if (opts.kind) {
+      items.kind = opts.kind;
+    }
+    const data = this.createExportObject(items);
+    switch (destination) {
+      case 'file': return this._exportFile(data, file);
+      case 'drive': return this._exportDrive(data, file);
+      default: return Promise.reject(`Unknown destination ${destination}`);
+    }
   }
   /**
    * Creates an export object for the data.
