@@ -152,12 +152,20 @@
           assert.isUndefined(result[0].legacyProject);
         });
 
-        test('Adds legacyProject to projects', function() {
+        test('Creates projects from legacyProject', function() {
           data[0].legacyProject = 'abc';
           delete data[0].projects;
           const result = element._prepareRequestsList(data);
           assert.typeOf(result[0].projects, 'array');
           assert.equal(result[0].projects[0], 'abc');
+        });
+
+        test('Adds to projects from legacyProject', function() {
+          data[0].projects = ['test'];
+          data[0].legacyProject = 'abc';
+          const result = element._prepareRequestsList(data);
+          assert.isUndefined(result[0].legacyProject);
+          assert.lengthOf(result[0].projects, 2);
         });
 
         test('kind property is set', function() {

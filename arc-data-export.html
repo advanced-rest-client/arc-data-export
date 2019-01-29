@@ -234,16 +234,13 @@ class ArcDataExport extends Polymer.Element {
    * @return {Promise}
    */
   _queryCookies() {
-    const e = new CustomEvent('session-cookie-list-all', {
-      bubbles: true,
-      composed: true,
-      cancelable: true,
-      detail: {}
-    });
-    this.dispatchEvent(e);
+    const e = this._dispatchCookieList();
     if (!e.defaultPrevented) {
-      console.error('electron-session-state module not active');
-      return Promise.resolve([]);
+      console.warn('electron-session-state module not active');
+      return Promise.resolve({
+        name: 'cookies',
+        data: []
+      });
     }
     return e.detail.result
     .then((data) => {
@@ -252,6 +249,20 @@ class ArcDataExport extends Polymer.Element {
         data
       };
     });
+  }
+  /**
+   * Disaptches `session-cookie-list-all` event and returns it.
+   * @return {CustomEvent}
+   */
+  _dispatchCookieList() {
+    const e = new CustomEvent('session-cookie-list-all', {
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+      detail: {}
+    });
+    this.dispatchEvent(e);
+    return e;
   }
 
   _prepareRequestsList(requests) {

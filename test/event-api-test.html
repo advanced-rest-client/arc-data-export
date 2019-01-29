@@ -21,7 +21,7 @@
 
     <script>
     /* global DataHelper, DataGenerator */
-    suite('Querying for data - events API', function() {
+    suite('Exporting data - events API', function() {
       function fire(detail) {
         const e = new CustomEvent('export-data', {
           detail,
@@ -77,6 +77,21 @@
           });
           assert.isTrue(e.defaultPrevented);
           return e.detail.result;
+        });
+
+        test('Ignores cancelled events', function() {
+          document.body.addEventListener('export-data', function f(e) {
+            document.body.removeEventListener('export-data', f);
+            e.preventDefault();
+          });
+          const e = fire({
+            type: 'arc-export',
+            destination: 'file',
+            data: {
+              saved: true,
+            }
+          });
+          assert.isUndefined(e.detail.result);
         });
 
         test('Has a promise', function() {
@@ -160,6 +175,20 @@
           });
           e.detail.result
           .catch((cause) => done(cause));
+        });
+
+        test('Calls dataExport() for default type', function() {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
+          });
+          const spy = sinon.spy(element, 'dataExport');
+          fire({
+            destination: 'file',
+            data: {
+              saved: true,
+            }
+          });
+          assert.isTrue(spy.called);
         });
       });
     });

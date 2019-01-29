@@ -56,7 +56,7 @@
           assert.equal(result.name, 'history-requests', 'Name is set');
           assert.typeOf(result.data, 'array', 'Data is an array');
           assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-          assert.isUndefined(result.data[0].type, 'Is a history request');
+          assert.equal(result.data[0].type, 'history', 'Is a history request');
         });
       });
 
