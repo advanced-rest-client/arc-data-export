@@ -8,6 +8,10 @@
  *   arc-data-export.html
  */
 
+
+// tslint:disable:variable-name Describing an API that's defined elsewhere.
+// tslint:disable:no-any describes the API as best we are able today
+
 /// <reference path="../polymer/types/polymer-element.d.ts" />
 
 declare namespace LogicElements {
@@ -87,6 +91,11 @@ declare namespace LogicElements {
      * the database.
      */
     _queryCookies(): Promise<any>|null;
+
+    /**
+     * Disaptches `session-cookie-list-all` event and returns it.
+     */
+    _dispatchCookieList(): CustomEvent|null;
     _prepareRequestsList(requests: any): any;
     _prepareProjectsList(projects: any): any;
     _prepareHistoryDataList(history: any): any;
