@@ -1,99 +1,91 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <script src="data-generator.js"></script>
     <script src="../../chance/dist/chance.min.js"></script>
+    <link rel="import" href="../../app-pouchdb/pouchdb.html">
+    <link rel="import" href="../../arc-data-generator/arc-data-generator.html">
     <link rel="import" href="../arc-data-export.html">
   </head>
   <body>
 
-    <test-fixture id="basic">
+    <test-fixture id="Basic">
       <template>
         <arc-data-export></arc-data-export>
       </template>
     </test-fixture>
 
     <script>
-    /* global fixture, assert, DataGenerator */
-    suite('basic', function() {
-
-      var element;
-
+    /* global DataGenerator, chance */
+    suite('Basic', function() {
+      function mockRev(data) {
+        return data.map((item) => {
+          item._rev = chance.string();
+          return item;
+        });
+      }
+      let element;
       suite('_isAllowedExport()', function() {
-
         setup(function() {
-          element = fixture('basic');
+          element = fixture('Basic');
         });
 
         test('Passes test for equal string attributes', function() {
-          var result = element._isAllowedExport('a', 'a');
+          const result = element._isAllowedExport('a', 'a');
           assert.isTrue(result);
         });
 
         test('Do not passes test for not equal string attributes', function() {
-          var result = element._isAllowedExport('a', 'b');
+          const result = element._isAllowedExport('a', 'b');
           assert.isFalse(result);
         });
 
         test('Passes test if type is in array', function() {
-          var result = element._isAllowedExport(['a','b','c'], 'a');
+          const result = element._isAllowedExport(['a', 'b', 'c'], 'a');
           assert.isTrue(result);
         });
 
         test('Do not passes test if type is not in array', function() {
-          var result = element._isAllowedExport(['a','b','c'], 'd');
+          const result = element._isAllowedExport(['a', 'b', 'c'], 'd');
           assert.isFalse(result);
         });
 
         test('Passes test if exportType equals "all"', function() {
-          var result = element._isAllowedExport('all');
+          const result = element._isAllowedExport('all');
           assert.isTrue(result);
         });
       });
 
       suite('_getDatabasesInfo()', function() {
-
         setup(function() {
-          element = fixture('basic');
+          element = fixture('Basic');
         });
 
         test('Returns empty object for not defined type', function() {
-          var result = element._getDatabasesInfo();
+          const result = element._getDatabasesInfo();
           assert.lengthOf(Object.keys(result), 0);
         });
 
         test('Returns mapping for a single database', function() {
-          var result = element._getDatabasesInfo('history');
+          const result = element._getDatabasesInfo('history');
           assert.typeOf(result['history-requests'], 'string');
           assert.lengthOf(Object.keys(result), 1);
         });
 
         test('Returns mapping for projects and saved requests', function() {
-          var result = element._getDatabasesInfo('saved');
+          const result = element._getDatabasesInfo('saved');
           assert.equal(result['saved-requests'], 'requests');
           assert.equal(result['legacy-projects'], 'projects');
           assert.lengthOf(Object.keys(result), 2);
         });
 
         test('Returns mapping for defined data types', function() {
-          var types = [
+          const types = [
             'history',
-            'history-url',
+            'url-history',
             'websocket',
             'variables',
             'headers-sets',
@@ -101,7 +93,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             'cookies',
             'host-rules'
           ];
-          var result = element._getDatabasesInfo(types);
+          const result = element._getDatabasesInfo(types);
           assert.equal(result['history-requests'], 'history');
           assert.equal(result['websocket-url-history'], 'websocket-url-history');
           assert.equal(result['url-history'], 'url-history');
@@ -115,71 +107,92 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareRequestsList()', function() {
-        var result;
+        let data;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateRequests('test', 5000);
-          data = DataGenerator.mockRev(data);
-          result = element._prepareRequestsList(data);
+          element = fixture('Basic');
+          const projects = DataGenerator.generateProjects({
+            projectsSize: 20
+          });
+          data = DataGenerator.generateRequests({
+            requestsSize: 20,
+            projects: projects
+          });
+          data = mockRev(data);
         });
 
         test('Result is an array', function() {
+          const result = element._prepareRequestsList(data);
           assert.typeOf(result, 'array');
         });
 
         test('_rev and _id is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          const result = element._prepareRequestsList(data);
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
             if (result[i]._rev) {
               throw new Error('_rev is set');
             }
+          }
+        });
+
+        test('key is set', function() {
+          const result = element._prepareRequestsList(data);
+          for (let i = 0, len = result.length; i < len; i++) {
+            assert.typeOf(result[i].key, 'string');
           }
         });
 
         test('legacyProject is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
-            if (result[i].legacyProject) {
-              throw new Error('_id is set');
-            }
-          }
+          data[0].legacyProject = 'abc';
+          delete data[0].projects;
+          const result = element._prepareRequestsList(data);
+          assert.isUndefined(result[0].legacyProject);
+        });
+
+        test('Creates projects from legacyProject', function() {
+          data[0].legacyProject = 'abc';
+          delete data[0].projects;
+          const result = element._prepareRequestsList(data);
+          assert.typeOf(result[0].projects, 'array');
+          assert.equal(result[0].projects[0], 'abc');
+        });
+
+        test('Adds to projects from legacyProject', function() {
+          data[0].projects = ['test'];
+          data[0].legacyProject = 'abc';
+          const result = element._prepareRequestsList(data);
+          assert.isUndefined(result[0].legacyProject);
+          assert.lengthOf(result[0].projects, 2);
         });
 
         test('kind property is set', function() {
+          const result = element._prepareRequestsList(data);
           assert.equal(result[0].kind, 'ARC#RequestData');
-        });
-
-        test('Has _referenceLegacyProject set', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
-            if (result[i]._referenceLegacyProject) {
-              return;
-            }
-          }
-          throw new Error('_referenceLegacyProject is not set');
         });
       });
 
       suite('_prepareProjectsList()', function() {
-        var result;
+        let data;
 
         setup(function() {
-          element = fixture('basic');
-          var data = [];
-          for (var i = 0; i < 100; i++) {
-            data.push(DataGenerator.createProjectObject());
-          }
-          data = DataGenerator.mockRev(data);
-          result = element._prepareProjectsList(data);
+          element = fixture('Basic');
+          data = DataGenerator.generateProjects({
+            projectsSize: 5
+          });
+          data = mockRev(data);
         });
 
         test('Result is an array', function() {
+          const result = element._prepareProjectsList(data);
           assert.typeOf(result, 'array');
         });
 
         test('_rev and _id is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          const result = element._prepareProjectsList(data);
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -189,26 +202,29 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           }
         });
 
-        test('_referenceId is set', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
-            if (!result[i]._referenceId) {
-              throw new Error('_referenceId is not set');
+        test('key is set', function() {
+          const ids = data.map((item) => item._id);
+          const result = element._prepareProjectsList(data);
+          for (let i = 0, len = result.length; i < len; i++) {
+            if (result[i].key !== ids[i]) {
+              throw new Error('Key is not set');
             }
           }
         });
 
         test('kind property is set', function() {
+          const result = element._prepareProjectsList(data);
           assert.equal(result[0].kind, 'ARC#ProjectData');
         });
       });
 
       suite('_prepareHistoryDataList()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateHistory();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateHistoryRequestsData();
+          data = mockRev(data);
           result = element._prepareHistoryDataList(data);
         });
 
@@ -217,7 +233,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -233,12 +249,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareVariablesData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateVariables();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateVariablesData();
+          data = mockRev(data);
           result = element._prepareVariablesData(data);
         });
 
@@ -247,7 +263,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -258,7 +274,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Contains key property', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             assert.typeOf(result[i].key, 'string');
           }
         });
@@ -269,12 +285,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareHeadersSetsData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateHeadersSets();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateHeadersSetsData();
+          data = mockRev(data);
           result = element._prepareHeadersSetsData(data);
         });
 
@@ -283,7 +299,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -294,7 +310,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('Contains key property', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             assert.typeOf(result[i].key, 'string');
           }
         });
@@ -305,12 +321,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareWsUrlHistoryData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateUrls();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateUrlsData();
+          data = mockRev(data);
           result = element._prepareWsUrlHistoryData(data);
         });
 
@@ -319,7 +335,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed, key is added', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -338,12 +354,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareUrlHistoryData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateUrls();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateUrlsData();
+          data = mockRev(data);
           result = element._prepareUrlHistoryData(data);
         });
 
@@ -352,7 +368,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed, key is added', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -371,12 +387,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareAuthData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateAuthData();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateBasicAuthData();
+          data = mockRev(data);
           result = element._prepareAuthData(data);
         });
 
@@ -385,7 +401,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed, key is added', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -404,12 +420,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareCookieData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateCookies();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateCookiesData();
+          data = mockRev(data);
           result = element._prepareCookieData(data);
         });
 
@@ -418,7 +434,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed, key is added', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -437,12 +453,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('_prepareHostRulesData()', function() {
-        var result;
+        let result;
 
         setup(function() {
-          element = fixture('basic');
-          var data = DataGenerator.generateHostRulesData();
-          data = DataGenerator.mockRev(data);
+          element = fixture('Basic');
+          let data = DataGenerator.generateHostRulesData();
+          data = mockRev(data);
           result = element._prepareHostRulesData(data);
         });
 
@@ -451,7 +467,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         });
 
         test('_rev and _id is removed, key is added', function() {
-          for (var i = 0, len = result.length; i < len; i++) {
+          for (let i = 0, len = result.length; i < len; i++) {
             if (result[i]._id) {
               throw new Error('_id is set');
             }
@@ -470,122 +486,116 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       });
 
       suite('createExportObject', function() {
-        var opts = {};
-        var clb;
-
-        suiteSetup(function() {
-          clb = function(event) {
-            event.detail.version = 'test-version';
-            event.preventDefault();
-          };
-          window.addEventListener('app-version', clb);
-        });
-
-        suiteTeardown(function() {
-          window.removeEventListener('app-version', clb);
-        });
+        let opts = {};
 
         setup(function() {
-          element = fixture('basic');
-          opts.cookies = DataGenerator.mockRev(DataGenerator.generateCookies());
-          opts['auth-data'] = DataGenerator.mockRev(DataGenerator.generateAuthData());
-          opts['url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
-          opts['websocket-url-history'] = DataGenerator.mockRev(DataGenerator.generateUrls());
-          opts['headers-sets'] = DataGenerator.mockRev(DataGenerator.generateHeadersSets());
-          opts.variables = DataGenerator.mockRev(DataGenerator.generateVariables());
-          opts.history = DataGenerator.mockRev(DataGenerator.generateHistory());
-          opts['host-rules'] = DataGenerator.mockRev(DataGenerator.generateHostRulesData());
-          var projects = [];
-          for (var i = 0; i < 100; i++) {
-            projects.push(DataGenerator.createProjectObject());
-          }
-          opts.projects = DataGenerator.mockRev(projects);
-          opts.requests = DataGenerator.mockRev(DataGenerator.generateRequests('test', 100));
+          element = fixture('Basic');
+          opts.cookies = mockRev(DataGenerator.generateCookiesData());
+          opts['auth-data'] = mockRev(DataGenerator.generateBasicAuthData());
+          opts['url-history'] = mockRev(DataGenerator.generateUrlsData());
+          opts['websocket-url-history'] = mockRev(DataGenerator.generateUrlsData());
+          opts['headers-sets'] = mockRev(DataGenerator.generateHeadersSetsData());
+          opts.variables = mockRev(DataGenerator.generateVariablesData());
+          opts.history = mockRev(DataGenerator.generateHistoryRequestsData());
+          opts['host-rules'] = mockRev(DataGenerator.generateHostRulesData());
+          const projects = DataGenerator.generateProjects({
+            projectsSize: 20
+          });
+          const requests = DataGenerator.generateRequests({
+            requestsSize: 20,
+            projects: projects
+          });
+          opts.projects = mockRev(projects);
+          opts.requests = mockRev(requests);
         });
 
         test('Sets createdAt property', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.createdAt, 'string');
         });
 
-        test('Version is set', function() {
-          var result = element.createExportObject(opts);
+        test('Default version is set', function() {
+          const result = element.createExportObject(opts);
+          assert.equal(result.version, 'unknown');
+        });
+
+        test('Sets version from attribute', function() {
+          element.appVersion = 'test-version';
+          const result = element.createExportObject(opts);
           assert.equal(result.version, 'test-version');
         });
 
         test('Cookies are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.cookies, 'array');
           assert.lengthOf(result.cookies, opts.cookies.length);
           assert.isUndefined(result.cookies[0]._rew, 'Array was processed');
         });
 
         test('auth-data are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result['auth-data'], 'array');
           assert.lengthOf(result['auth-data'], opts['auth-data'].length);
           assert.isUndefined(result['auth-data'][0]._rew, 'Array was processed');
         });
 
         test('url-history are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result['url-history'], 'array');
           assert.lengthOf(result['url-history'], opts['url-history'].length);
           assert.isUndefined(result['url-history'][0]._rew, 'Array was processed');
         });
 
         test('websocket-url-history are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result['websocket-url-history'], 'array');
           assert.lengthOf(result['websocket-url-history'], opts['websocket-url-history'].length);
           assert.isUndefined(result['websocket-url-history'][0]._rew, 'Array was processed');
         });
 
         test('headers-sets are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result['headers-sets'], 'array');
           assert.lengthOf(result['headers-sets'], opts['headers-sets'].length);
           assert.isUndefined(result['headers-sets'][0]._rew, 'Array was processed');
         });
 
         test('variables are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.variables, 'array');
           assert.lengthOf(result.variables, opts.variables.length);
           assert.isUndefined(result.variables[0]._rew, 'Array was processed');
         });
 
         test('history are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.history, 'array');
           assert.lengthOf(result.history, opts.history.length);
           assert.isUndefined(result.history[0]._rew, 'Array was processed');
         });
 
         test('projects are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.projects, 'array');
           assert.lengthOf(result.projects, opts.projects.length);
           assert.isUndefined(result.projects[0]._rew, 'Array was processed');
         });
 
         test('requests are set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result.requests, 'array');
           assert.lengthOf(result.requests, opts.requests.length);
           assert.isUndefined(result.requests[0]._rew, 'Array was processed');
         });
 
         test('host-rules is set', function() {
-          var result = element.createExportObject(opts);
+          const result = element.createExportObject(opts);
           assert.typeOf(result['host-rules'], 'array');
           assert.lengthOf(result['host-rules'], opts['host-rules'].length);
           assert.isUndefined(result['host-rules'][0]._rew, 'Array was processed');
         });
       });
-
     });
     </script>
-
   </body>
 </html>

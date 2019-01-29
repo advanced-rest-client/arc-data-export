@@ -1,24 +1,14 @@
 <!doctype html>
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
 <html>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
     <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../iron-test-helpers/test-helpers.js"></script>
-    <script src="../../iron-test-helpers/mock-interactions.js"></script>
-    <script src="data-generator.js"></script>
     <script src="../../chance/dist/chance.min.js"></script>
+    <script src="data-helper.js"></script>
+    <link rel="import" href="../../app-pouchdb/pouchdb.html">
+    <link rel="import" href="../../arc-data-generator/arc-data-generator.html">
     <link rel="import" href="../arc-data-export.html">
   </head>
   <body>
@@ -30,542 +20,175 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </test-fixture>
 
     <script>
-    /* global fixture, assert, DataGenerator, sinon */
-    suite('Querying for data - events API', function() {
-
-      function fire(type, detail, node) {
-        var event = new CustomEvent(type, {
-          detail: detail,
+    /* global DataHelper, DataGenerator */
+    suite('Exporting data - events API', function() {
+      function fire(detail) {
+        const e = new CustomEvent('export-data', {
+          detail,
           bubbles: true,
           composed: true,
           cancelable: true
         });
-        (node || document.body).dispatchEvent(event);
-        return event;
+        document.body.dispatchEvent(e);
+        return e;
       }
 
-      suite('export-user-data', function() {
-        const sampleSzie = 100;
+      function waitUntilFileEvent(done) {
+        window.addEventListener('file-data-save', function f(e) {
+          window.removeEventListener('file-data-save', f);
+          done(e);
+        });
+      }
+
+      function waitUntilDriveEvent(done) {
+        window.addEventListener('google-drive-data-save', function f(e) {
+          window.removeEventListener('google-drive-data-save', f);
+          done(e);
+        });
+      }
+
+      suite('export-data', function() {
+        const sampleSzie = 15;
 
         suiteSetup(function() {
           this.timeout(20000);
-          return DataGenerator.generateData(sampleSzie);
+          return DataHelper.generateData(sampleSzie);
         });
 
         suiteTeardown(function() {
-          return DataGenerator.destroyData();
+          return DataGenerator.destroyAll();
         });
 
-        var element;
+        let element;
         setup(function() {
           element = fixture('basic');
         });
 
-        test('Creates an export object', function() {
-          var e = fire('export-user-data', {
-            type: 'saved'
+        test('Cancels the event', function() {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
           });
-          assert.isTrue(e.defaultPrevented);
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result, 'object', 'result is an object');
-            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-            assert.equal(result.kind, 'ARC#AllDataExport', 'Kind is set');
-            assert.equal(result.version, 'unknown', 'version is set');
-          });
-        });
-
-        test('Creates saved data export', function() {
-          var e = fire('export-user-data', {
-            type: 'saved'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.projects, 'array', 'projects are set');
-            assert.isAbove(result.projects.length, 0, 'projects are not empty');
-
-            assert.typeOf(result.requests, 'array', 'requests are set');
-            assert.lengthOf(result.requests, sampleSzie, 'Requests size is OK');
-          });
-        });
-
-        test('Creates history data export', function() {
-          var e = fire('export-user-data', {
-            type: 'history'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.history, 'array', 'history are set');
-            assert.lengthOf(result.history, sampleSzie, 'history are not empty');
-          });
-        });
-
-        test('Creates websocket URL history data export', function() {
-          var e = fire('export-user-data', {
-            type: 'websocket'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result['websocket-url-history'], 'array', 'websocket are set');
-            assert.lengthOf(result['websocket-url-history'], 25, 'websocket are not empty');
-          });
-        });
-
-        test('Creates URL history data export', function() {
-          var e = fire('export-user-data', {
-            type: 'history-url'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result['url-history'], 'array', 'url-history are set');
-            assert.lengthOf(result['url-history'], 25, 'url-history are not empty');
-          });
-        });
-
-        test('Creates variables data export', function() {
-          var e = fire('export-user-data', {
-            type: 'variables'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.variables, 'array', 'variables are set');
-            assert.lengthOf(result.variables, 25, 'variables are not empty');
-          });
-        });
-
-        test('Creates headers-sets data export', function() {
-          var e = fire('export-user-data', {
-            type: 'headers-sets'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result['headers-sets'], 'array', 'headers-sets are set');
-            assert.lengthOf(result['headers-sets'], 25, 'headers-sets are not empty');
-          });
-        });
-
-        test('Creates cookies data export', function() {
-          var e = fire('export-user-data', {
-            type: 'cookies'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.cookies, 'array', 'cookies are set');
-            assert.lengthOf(result.cookies, 25, 'cookies are not empty');
-          });
-        });
-
-        test('Creates headers-sets data export', function() {
-          var e = fire('export-user-data', {
-            type: 'auth'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result['auth-data'], 'array', 'auth-data are set');
-            assert.lengthOf(result['auth-data'], 25, 'auth-data are not empty');
-          });
-        });
-
-        test('Creates full data export', function() {
-          var e = fire('export-user-data', {
-            type: 'all'
-          });
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result['auth-data'], 'array', 'auth-data are set');
-            assert.typeOf(result.cookies, 'array', 'cookies are set');
-            assert.typeOf(result['headers-sets'], 'array', 'headers-sets are set');
-            assert.typeOf(result.variables, 'array', 'variables are set');
-            assert.typeOf(result['url-history'], 'array', 'url-history are set');
-            assert.typeOf(result['websocket-url-history'], 'array', 'websocket are set');
-            assert.typeOf(result.history, 'array', 'history are set');
-            assert.typeOf(result.projects, 'array', 'projects are set');
-            assert.typeOf(result.requests, 'array', 'requests are set');
-          });
-        });
-
-        test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
-          element.addEventListener('export-data', spy);
-          var e = fire('export-user-data', {
-            type: 'all'
-          });
-          return e.detail.result
-          .then(() => {
-            assert.isTrue(spy.calledOnce);
-          });
-        });
-
-        test('export-data event contains export object', function() {
-          var eventData;
-          element.addEventListener('export-data', function(e) {
-            eventData = e.detail;
-          });
-          var e = fire('export-user-data', {
-            type: 'all'
-          });
-          return e.detail.result
-          .then(() => {
-            assert.typeOf(eventData, 'object');
-            assert.equal(eventData.type, 'application/json');
-            assert.typeOf(eventData.data, 'object');
-            assert.equal(eventData.data.kind, 'ARC#AllDataExport');
-            assert.typeOf(eventData.file, 'string');
-          });
-        });
-
-        test('Fires google-drive-data-save custom event', function() {
-          var spy = sinon.spy();
-          element.addEventListener('google-drive-data-save', spy);
-          var e = fire('export-user-data', {
-            type: 'all',
-            destination: 'drive'
-          });
-          return e.detail.result
-          .then(() => {
-            assert.isTrue(spy.calledOnce);
-          });
-        });
-
-        test('google-drive-data-save event contains export object', function() {
-          var eventData;
-          element.addEventListener('google-drive-data-save', function clb(e) {
-            element.removeEventListener('google-drive-data-save', clb);
-            eventData = e.detail;
-          });
-          var e = fire('export-user-data', {
-            type: 'all',
-            destination: 'drive'
-          });
-          return e.detail.result
-          .then(() => {
-            assert.typeOf(eventData, 'object');
-            assert.equal(eventData.contentType, 'application/json');
-            assert.typeOf(eventData.content, 'object');
-            assert.typeOf(eventData.file, 'string');
-          });
-        });
-      });
-
-      suite('export-project', function() {
-        var element;
-        var project;
-        var requests;
-        var variables;
-
-        suiteSetup(function() {
-          this.timeout(20000);
-          project = DataGenerator.createProjectObject();
-          requests = DataGenerator.generateRequests(project._id, 2000);
-          variables = DataGenerator.generateVariables();
-        });
-
-        setup(function() {
-          element = fixture('basic');
-        });
-
-        function fireProject() {
-          return fire('export-project', {
-            project: project,
-            requests: requests,
-            variables: variables,
+          const e = fire({
+            type: 'arc-export',
             destination: 'file',
-            file: 'test-file'
+            data: {
+              saved: true,
+            }
           });
-        }
-
-        test('Event is canceled', function() {
-          var e = fireProject();
           assert.isTrue(e.defaultPrevented);
+          return e.detail.result;
         });
 
-        test('Returns a promise', function() {
-          var e = fireProject();
-          var result = e.detail.result;
-          assert.typeOf(result.then, 'function');
+        test('Ignores cancelled events', function() {
+          document.body.addEventListener('export-data', function f(e) {
+            document.body.removeEventListener('export-data', f);
+            e.preventDefault();
+          });
+          const e = fire({
+            type: 'arc-export',
+            destination: 'file',
+            data: {
+              saved: true,
+            }
+          });
+          assert.isUndefined(e.detail.result);
         });
 
-        test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
-          element.addEventListener('export-data', spy);
-          fireProject();
-          assert.isTrue(spy.calledOnce);
+        test('Has a promise', function() {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
+          });
+          const e = fire({
+            type: 'arc-export',
+            destination: 'file',
+            data: {
+              saved: true,
+            }
+          });
+          assert.typeOf(e.detail.result.then, 'function');
+          return e.detail.result;
         });
 
-        test('export-data contains project object', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
-            assert.typeOf(result, 'object', 'result is an object');
-            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-            assert.equal(result.kind, 'ARC#Project', 'Kind is set');
-            assert.equal(result.version, 'unknown', 'version is set');
+        test('Creates an export object with saved data', function(done) {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
+            const data = e.detail.content;
+            assert.typeOf(data.requests, 'array');
+            assert.lengthOf(data.requests, 15);
             done();
           });
-          fireProject();
+          const e = fire({
+            type: 'arc-export',
+            destination: 'file',
+            data: {
+              saved: true,
+            }
+          });
+          e.detail.result
+          .catch((cause) => done(cause));
         });
 
-        test('Adds project to the projects listt', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
-            assert.typeOf(result.projects, 'array', 'projects is an array');
-            assert.lengthOf(result.projects, 1, 'projects contains one item');
+        test('Creates export object with existing data', function(done) {
+          waitUntilFileEvent((e) => {
+            e.preventDefault();
+            const data = e.detail.content;
+            assert.typeOf(data.history, 'array');
+            assert.lengthOf(data.history, 1);
             done();
           });
-          fireProject();
-        });
-
-        test('Adds requests property', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
-            assert.typeOf(result.requests, 'array', 'requests is an array');
-            assert.isAbove(result.requests.length, 0, 'requests contains list of requests');
-            done();
+          const e = fire({
+            type: 'items-export',
+            destination: 'file',
+            file: 'arc-history-export.json',
+            kind: 'ARC#HistoryExport',
+            items: {
+              history: [{
+                _id: 'test',
+                url: 'https://domain.com',
+                type: 'history',
+                headers: 'x-a: b',
+                method: 'GET'
+              }]
+            }
           });
-          fireProject();
+          e.detail.result
+          .catch((cause) => done(cause));
         });
 
-        test('Adds variables property', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
-            var result = e.detail.data;
-            assert.typeOf(result.variables, 'array', 'variables is an array');
-            assert.isAbove(result.variables.length, 0, 'variables is not empty');
-            done();
-          });
-          fireProject();
-        });
-
-        test('export-data contains meta data', function(done) {
-          element.addEventListener('export-data', function clb(e) {
-            element.removeEventListener('export-data', clb);
+        test('Exports data to Drive', function(done) {
+          waitUntilDriveEvent((e) => {
+            e.preventDefault();
+            const data = e.detail.content;
+            assert.typeOf(data.requests, 'array');
+            assert.lengthOf(data.requests, 15);
             assert.equal(e.detail.file, 'test-file');
-            assert.equal(e.detail.type, 'application/json');
+            assert.equal(e.detail.contentType, 'application/json');
             done();
           });
-          fireProject();
+          const e = fire({
+            type: 'arc-export',
+            destination: 'drive',
+            file: 'test-file',
+            data: {
+              saved: true,
+            }
+          });
+          e.detail.result
+          .catch((cause) => done(cause));
         });
-      });
 
-      suite('export-request', function() {
-        var element;
-        var request;
-        var variables;
-        var callback;
-
-        suiteSetup(function() {
-          request = DataGenerator.generateRequests(undefined, 1)[0];
-          variables = DataGenerator.generateVariables();
-          callback = function(e) {
+        test('Calls dataExport() for default type', function() {
+          waitUntilFileEvent((e) => {
             e.preventDefault();
-            e.detail.result = Promise.resolve({});
-          };
-          window.addEventListener('export-data', callback);
-        });
-
-        suiteTeardown(function() {
-          window.removeEventListener('export-data', callback);
-        });
-
-        setup(function() {
-          element = fixture('basic');
-        });
-
-        function fireProject() {
-          return fire('export-request', {
-            request: request,
-            variables: variables
           });
-        }
-
-        test('Event is canceled', function() {
-          var e = fireProject();
-          assert.isTrue(e.defaultPrevented);
-        });
-
-        test('Creates export object', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result, 'object', 'result is an object');
-            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-            assert.equal(result.kind, 'ARC#Request', 'Kind is set');
-            assert.equal(result.version, 'unknown', 'version is set');
+          const spy = sinon.spy(element, 'dataExport');
+          fire({
+            destination: 'file',
+            data: {
+              saved: true,
+            }
           });
-        });
-
-        test('Adds request property', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.requests, 'array', 'requests is an array');
-            assert.lengthOf(result.requests, 1, 'requests contains one item');
-          });
-        });
-
-        test('Adds variables property', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.variables, 'array', 'variables is an array');
-            assert.isAbove(result.variables.length, 0, 'variables is not empty');
-          });
-        });
-
-        test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
-          element.addEventListener('export-data', spy);
-          fireProject();
-          assert.isTrue(spy.calledOnce);
-        });
-      });
-
-      suite('export-requests', function() {
-        var element;
-        var requests;
-        var variables;
-        var callback;
-        suiteSetup(function() {
-          this.timeout(20000);
-          requests = DataGenerator.generateRequests(undefined, 2000);
-          variables = DataGenerator.generateVariables();
-          callback = function(e) {
-            e.preventDefault();
-            e.detail.result = Promise.resolve({});
-          };
-          window.addEventListener('export-data', callback);
-        });
-
-        suiteTeardown(function() {
-          window.removeEventListener('export-data', callback);
-        });
-
-        setup(function() {
-          element = fixture('basic');
-        });
-
-        function fireProject() {
-          return fire('export-requests', {
-            requests: requests,
-            variables: variables
-          });
-        }
-
-        test('Event is canceled', function() {
-          var e = fireProject();
-          assert.isTrue(e.defaultPrevented);
-        });
-
-        test('Creates export object', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result, 'object', 'result is an object');
-            assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-            assert.equal(result.kind, 'ARC#RequestsList', 'Kind is set');
-            assert.equal(result.version, 'unknown', 'version is set');
-          });
-        });
-
-        test('Adds requests property', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.requests, 'array', 'requests is an array');
-            assert.lengthOf(result.requests, 2000, 'requests is not empty');
-          });
-        });
-
-        test('Adds variables property', function() {
-          var e = fireProject();
-          return e.detail.result
-          .then(result => {
-            assert.typeOf(result.variables, 'array', 'variables is an array');
-            assert.isAbove(result.variables.length, 0, 'variables is not empty');
-          });
-        });
-
-        test('Fires export-data custom event', function() {
-          var spy = sinon.spy();
-          element.addEventListener('export-data', spy);
-          fireProject();
-          assert.isTrue(spy.calledOnce);
-        });
-      });
-
-      suite('export-create-object', function() {
-        var element;
-        var requests;
-        var variables;
-        var project;
-        var cookies;
-        const kind = 'ARC#TEST';
-        suiteSetup(function() {
-          this.timeout(20000);
-          project = DataGenerator.createProjectObject();
-          requests = DataGenerator.generateRequests(project._id, 2000);
-          variables = DataGenerator.generateVariables();
-          cookies = DataGenerator.generateCookies();
-        });
-
-        setup(function() {
-          element = fixture('basic');
-        });
-
-        function fireExport() {
-          return fire('export-create-object', {
-            types: {
-              projects: [project],
-              requests: requests,
-              variables: variables,
-              cookies: cookies,
-            },
-            kind: kind
-          });
-        }
-
-        test('Event is canceled', function() {
-          var e = fireExport();
-          assert.isTrue(e.defaultPrevented);
-        });
-
-        test('Creates export object', function() {
-          var e = fireExport();
-          var result = e.detail.result;
-          assert.typeOf(result, 'object', 'result is an object');
-          assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-          assert.equal(result.kind, kind, 'Kind is set');
-          assert.equal(result.version, 'unknown', 'version is set');
-        });
-
-        test('Adds requests property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
-          assert.typeOf(result.requests, 'array', 'requests is an array');
-          assert.lengthOf(result.requests, 2000, 'requests is not empty');
-        });
-
-        test('Adds variables property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
-          assert.typeOf(result.variables, 'array', 'variables is an array');
-          assert.isAbove(result.variables.length, 0, 'variables is not empty');
-        });
-
-        test('Adds projects property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
-          assert.typeOf(result.projects, 'array', 'projects is an array');
-          assert.lengthOf(result.projects, 1, 'projects has one item');
-        });
-
-        test('Adds cookies property', function() {
-          var e = fireExport();
-          var result = e.detail.result;
-          assert.typeOf(result.cookies, 'array', 'cookies is an array');
-          assert.lengthOf(result.cookies, 25, 'cookies has all items');
+          assert.isTrue(spy.called);
         });
       });
     });
