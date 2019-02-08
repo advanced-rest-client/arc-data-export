@@ -38,52 +38,58 @@ declare namespace LogicElements {
     electronCookies: boolean|null|undefined;
     connectedCallback(): void;
     disconnectedCallback(): void;
-    _exportHandler(e: any): void;
+
+    /**
+     * Handler for the `export-data` custom event.
+     * This event is not meant to be used to export ARC datstre data.
+     */
+    _exportHandler(e: CustomEvent|null): void;
+
+    /**
+     * Handler for `arc-data-export` event that exports ARC data
+     * (settings, requests, project, etc).
+     *
+     * @param e Event dispatched by element requesting the export.
+     */
+    _arcExportHandler(e: CustomEvent|null): void;
     dataExport(opts: any): any;
 
     /**
      * Generates and saves ARC export object from user data.
      *
-     * @param opts Export options. See
+     * @param detail Export configuration. See
      * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/export-event.md
      * for details.
      * @returns Promise resolved to a result of saving a file.
      * Google Drive results with create response.
      */
-    arcExport(opts: object|null): Promise<any>|null;
-
-    /**
-     * Exports data that are already retreived from the datastore.
-     * It calls `createExportObject` to prepare arc export object so the `items`
-     * object set on the `opts` has to have the same structure as the function's
-     * only argument.
-     *
-     * @param opts Export options:
-     * - `file` (String) Optional. Export file name.
-     * - `destination` (String) `drive` or `file`.
-     * - `items` (Object) The same structore as `opts` argument for `createExportObject()`
-     * - `kind` (String) Opional. Export item kind property.
-     */
-    itemsExport(opts: object|null): Promise<any>|null;
+    arcExport(detail: object|null): Promise<any>|null;
 
     /**
      * Creates an export object for the data.
      *
-     * @param opts Export options. Available keys:
+     * @param data Export options. Available keys:
      * -   `requests` (Array) List of requests to export
      * -   `projects` (Array) List of projects to export
      * -   `history` (Array) List of history requests to export
      * -   `websocket-url-history` (Array) List of url history object for WS to export
      * -   `url-history` (Array) List of URL history objects to export
      * -   `variables` (Array) List of variables to export
-     * -   `headers-sets` (Array) List of the headers sets objects to export
      * -   `auth-data` (Array) List of the auth data objects to export
      * -   `cookies` (Array) List of cookies to export
      * -   `kind` (String) The `kind` property of the top export declaration.
      *      Default to `ARC#AllDataExport`
+     * @param options Export configuration object
      * @returns ARC export object declaration.
      */
-    createExportObject(opts: object|null): object|null;
+    createExportObject(data: object|null, options: object|null): object|null;
+
+    /**
+     * Creates a worker and references it as `_worker` property.
+     *
+     * @returns Reference to the data processing worker/
+     */
+    _ensureWorker(): Worker|null;
 
     /**
      * A function used with `electronCookies` flag.
@@ -96,16 +102,6 @@ declare namespace LogicElements {
      * Disaptches `session-cookie-list-all` event and returns it.
      */
     _dispatchCookieList(): CustomEvent|null;
-    _prepareRequestsList(requests: any): any;
-    _prepareProjectsList(projects: any): any;
-    _prepareHistoryDataList(history: any): any;
-    _prepareWsUrlHistoryData(history: any): any;
-    _prepareUrlHistoryData(history: any): any;
-    _prepareVariablesData(variables: any): any;
-    _prepareHeadersSetsData(sets: any): any;
-    _prepareAuthData(authData: any): any;
-    _prepareCookieData(authData: any): any;
-    _prepareHostRulesData(hostRules: any): any;
 
     /**
      * Checks if `type` is one of the allowed export types defined in
@@ -142,16 +138,18 @@ declare namespace LogicElements {
      *
      * @param data Data to export
      * @param file File name
+     * @param options Provider options
      */
-    _exportFile(data: object|String|null, file: String|null): Promise<any>|null;
+    _exportFile(data: object|String|null, file: String|null, options: object|null): Promise<any>|null;
 
     /**
      * Requests application to export data to Google Drive.
      *
      * @param data Data to export
      * @param file File name
+     * @param options Provider options
      */
-    _exportDrive(data: object|String|null, file: String|null): Promise<any>|null;
+    _exportDrive(data: object|String|null, file: String|null, options: object|null): Promise<any>|null;
   }
 }
 

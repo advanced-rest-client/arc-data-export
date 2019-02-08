@@ -611,11 +611,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 30,
+              "line": 33,
               "column": 6
             },
             "end": {
-              "line": 30,
+              "line": 33,
               "column": 50
             }
           },
@@ -633,11 +633,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 34,
+              "line": 37,
               "column": 6
             },
             "end": {
-              "line": 37,
+              "line": 40,
               "column": 7
             }
           },
@@ -655,11 +655,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 41,
+              "line": 44,
               "column": 6
             },
             "end": {
-              "line": 41,
+              "line": 44,
               "column": 30
             }
           },
@@ -2758,11 +2758,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 50,
+              "line": 54,
               "column": 2
             },
             "end": {
-              "line": 53,
+              "line": 58,
               "column": 3
             }
           },
@@ -2778,11 +2778,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 55,
+              "line": 60,
               "column": 2
             },
             "end": {
-              "line": 58,
+              "line": 67,
               "column": 3
             }
           },
@@ -2885,22 +2885,49 @@
         },
         {
           "name": "_exportHandler",
-          "description": "",
+          "description": "Handler for the `export-data` custom event.\nThis event is not meant to be used to export ARC datstre data.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 60,
+              "line": 73,
               "column": 2
             },
             "end": {
-              "line": 78,
+              "line": 79,
               "column": 3
             }
           },
           "metadata": {},
           "params": [
             {
-              "name": "e"
+              "name": "e",
+              "type": "CustomEvent"
+            }
+          ],
+          "return": {
+            "type": "void"
+          }
+        },
+        {
+          "name": "_arcExportHandler",
+          "description": "Handler for `arc-data-export` event that exports ARC data\n(settings, requests, project, etc).",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 85,
+              "column": 2
+            },
+            "end": {
+              "line": 91,
+              "column": 3
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "e",
+              "type": "CustomEvent",
+              "description": "Event dispatched by element requesting the export."
             }
           ],
           "return": {
@@ -2913,11 +2940,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 80,
+              "line": 93,
               "column": 2
             },
             "end": {
-              "line": 89,
+              "line": 102,
               "column": 3
             }
           },
@@ -2934,20 +2961,20 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 98,
+              "line": 111,
               "column": 2
             },
             "end": {
-              "line": 143,
+              "line": 163,
               "column": 3
             }
           },
           "metadata": {},
           "params": [
             {
-              "name": "opts",
+              "name": "detail",
               "type": "Object",
-              "description": "Export options. See\nhttps://github.com/advanced-rest-client/api-components-api/blob/master/docs/export-event.md\nfor details."
+              "description": "Export configuration. See\nhttps://github.com/advanced-rest-client/api-components-api/blob/master/docs/export-event.md\nfor details."
             }
           ],
           "return": {
@@ -2956,51 +2983,30 @@
           }
         },
         {
-          "name": "itemsExport",
-          "description": "Exports data that are already retreived from the datastore.\nIt calls `createExportObject` to prepare arc export object so the `items`\nobject set on the `opts` has to have the same structure as the function's\nonly argument.",
-          "privacy": "public",
-          "sourceRange": {
-            "start": {
-              "line": 156,
-              "column": 2
-            },
-            "end": {
-              "line": 169,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "opts",
-              "type": "Object",
-              "description": "Export options:\n- `file` (String) Optional. Export file name.\n- `destination` (String) `drive` or `file`.\n- `items` (Object) The same structore as `opts` argument for `createExportObject()`\n- `kind` (String) Opional. Export item kind property."
-            }
-          ],
-          "return": {
-            "type": "Promise"
-          }
-        },
-        {
           "name": "createExportObject",
           "description": "Creates an export object for the data.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 187,
+              "line": 181,
               "column": 2
             },
             "end": {
-              "line": 228,
+              "line": 211,
               "column": 3
             }
           },
           "metadata": {},
           "params": [
             {
-              "name": "opts",
+              "name": "data",
               "type": "Object",
-              "description": "Export options. Available keys:\n-   `requests` (Array) List of requests to export\n-   `projects` (Array) List of projects to export\n-   `history` (Array) List of history requests to export\n-   `websocket-url-history` (Array) List of url history object for WS to export\n-   `url-history` (Array) List of URL history objects to export\n-   `variables` (Array) List of variables to export\n-   `headers-sets` (Array) List of the headers sets objects to export\n-   `auth-data` (Array) List of the auth data objects to export\n-   `cookies` (Array) List of cookies to export\n-   `kind` (String) The `kind` property of the top export declaration.\n     Default to `ARC#AllDataExport`"
+              "description": "Export options. Available keys:\n-   `requests` (Array) List of requests to export\n-   `projects` (Array) List of projects to export\n-   `history` (Array) List of history requests to export\n-   `websocket-url-history` (Array) List of url history object for WS to export\n-   `url-history` (Array) List of URL history objects to export\n-   `variables` (Array) List of variables to export\n-   `auth-data` (Array) List of the auth data objects to export\n-   `cookies` (Array) List of cookies to export\n-   `kind` (String) The `kind` property of the top export declaration.\n     Default to `ARC#AllDataExport`"
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "description": "Export configuration object"
             }
           ],
           "return": {
@@ -3009,16 +3015,37 @@
           }
         },
         {
+          "name": "_ensureWorker",
+          "description": "Creates a worker and references it as `_worker` property.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 217,
+              "column": 2
+            },
+            "end": {
+              "line": 225,
+              "column": 3
+            }
+          },
+          "metadata": {},
+          "params": [],
+          "return": {
+            "type": "Worker",
+            "desc": "Reference to the data processing worker/"
+          }
+        },
+        {
           "name": "_queryCookies",
           "description": "A function used with `electronCookies` flag.\nIt queries `electron-session-state` node module for cookies instead of\nthe database.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 235,
+              "line": 232,
               "column": 2
             },
             "end": {
-              "line": 251,
+              "line": 248,
               "column": 3
             }
           },
@@ -3034,11 +3061,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 256,
+              "line": 253,
               "column": 2
             },
             "end": {
-              "line": 265,
+              "line": 262,
               "column": 3
             }
           },
@@ -3049,226 +3076,16 @@
           }
         },
         {
-          "name": "_prepareRequestsList",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 267,
-              "column": 2
-            },
-            "end": {
-              "line": 284,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "requests"
-            }
-          ]
-        },
-        {
-          "name": "_prepareProjectsList",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 286,
-              "column": 2
-            },
-            "end": {
-              "line": 294,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "projects"
-            }
-          ]
-        },
-        {
-          "name": "_prepareHistoryDataList",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 296,
-              "column": 2
-            },
-            "end": {
-              "line": 304,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "history"
-            }
-          ]
-        },
-        {
-          "name": "_prepareWsUrlHistoryData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 306,
-              "column": 2
-            },
-            "end": {
-              "line": 315,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "history"
-            }
-          ]
-        },
-        {
-          "name": "_prepareUrlHistoryData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 317,
-              "column": 2
-            },
-            "end": {
-              "line": 326,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "history"
-            }
-          ]
-        },
-        {
-          "name": "_prepareVariablesData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 328,
-              "column": 2
-            },
-            "end": {
-              "line": 343,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "variables"
-            }
-          ]
-        },
-        {
-          "name": "_prepareHeadersSetsData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 345,
-              "column": 2
-            },
-            "end": {
-              "line": 354,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "sets"
-            }
-          ]
-        },
-        {
-          "name": "_prepareAuthData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 356,
-              "column": 2
-            },
-            "end": {
-              "line": 365,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "authData"
-            }
-          ]
-        },
-        {
-          "name": "_prepareCookieData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 367,
-              "column": 2
-            },
-            "end": {
-              "line": 379,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "authData"
-            }
-          ]
-        },
-        {
-          "name": "_prepareHostRulesData",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 381,
-              "column": 2
-            },
-            "end": {
-              "line": 389,
-              "column": 3
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "hostRules"
-            }
-          ]
-        },
-        {
           "name": "_isAllowedExport",
           "description": "Checks if `type` is one of the allowed export types defined in\n`exportType`.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 399,
+              "line": 272,
               "column": 2
             },
             "end": {
-              "line": 404,
+              "line": 277,
               "column": 3
             }
           },
@@ -3296,11 +3113,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 413,
+              "line": 286,
               "column": 2
             },
             "end": {
-              "line": 444,
+              "line": 314,
               "column": 3
             }
           },
@@ -3323,11 +3140,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 452,
+              "line": 322,
               "column": 2
             },
             "end": {
-              "line": 481,
+              "line": 351,
               "column": 3
             }
           },
@@ -3350,11 +3167,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 489,
+              "line": 360,
               "column": 2
             },
             "end": {
-              "line": 505,
+              "line": 382,
               "column": 3
             }
           },
@@ -3369,6 +3186,11 @@
               "name": "file",
               "type": "String",
               "description": "File name"
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "description": "Provider options"
             }
           ],
           "return": {
@@ -3381,11 +3203,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 513,
+              "line": 391,
               "column": 2
             },
             "end": {
-              "line": 529,
+              "line": 413,
               "column": 3
             }
           },
@@ -3400,6 +3222,11 @@
               "name": "file",
               "type": "String",
               "description": "File name"
+            },
+            {
+              "name": "options",
+              "type": "Object",
+              "description": "Provider options"
             }
           ],
           "return": {
@@ -4368,11 +4195,11 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 22,
+          "line": 23,
           "column": 0
         },
         "end": {
-          "line": 546,
+          "line": 430,
           "column": 1
         }
       },
@@ -4385,11 +4212,11 @@
           "description": "Hosting application version number. If not set it sends `app-version`\ncustom event to query for the application version number.",
           "sourceRange": {
             "start": {
-              "line": 30,
+              "line": 33,
               "column": 6
             },
             "end": {
-              "line": 30,
+              "line": 33,
               "column": 50
             }
           },
@@ -4401,11 +4228,11 @@
           "description": "A size of datastore read operation in one call.",
           "sourceRange": {
             "start": {
-              "line": 34,
+              "line": 37,
               "column": 6
             },
             "end": {
-              "line": 37,
+              "line": 40,
               "column": 7
             }
           },
@@ -4417,11 +4244,11 @@
           "description": "If set it uses arc electron session state module to read cookie data",
           "sourceRange": {
             "start": {
-              "line": 41,
+              "line": 44,
               "column": 6
             },
             "end": {
-              "line": 41,
+              "line": 44,
               "column": 30
             }
           },
