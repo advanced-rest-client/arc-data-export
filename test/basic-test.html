@@ -88,7 +88,6 @@
             'url-history',
             'websocket',
             'variables',
-            'headers-sets',
             'auth',
             'cookies',
             'host-rules'
@@ -97,7 +96,6 @@
           assert.equal(result['history-requests'], 'history');
           assert.equal(result['websocket-url-history'], 'websocket-url-history');
           assert.equal(result['url-history'], 'url-history');
-          assert.equal(result['headers-sets'], 'headers-sets');
           assert.equal(result['auth-data'], 'auth-data');
           assert.equal(result['host-rules'], 'host-rules');
           assert.equal(result.variables, 'variables');
@@ -106,493 +104,325 @@
         });
       });
 
-      suite('_prepareRequestsList()', function() {
-        let data;
+      // suite('_prepareRequestsList()', function() {
+      //   let data;
+      //
+      //   setup(function() {
+      //     element = fixture('Basic');
+      //     const projects = DataGenerator.generateProjects({
+      //       projectsSize: 20
+      //     });
+      //     data = DataGenerator.generateRequests({
+      //       requestsSize: 20,
+      //       projects: projects
+      //     });
+      //     data = mockRev(data);
+      //   });
+      //
+      //   test('Result is an array', function() {
+      //     const result = element._prepareRequestsList(data);
+      //     assert.typeOf(result, 'array');
+      //   });
+      //
+      //   test('_rev and _id is removed', function() {
+      //     const result = element._prepareRequestsList(data);
+      //     for (let i = 0, len = result.length; i < len; i++) {
+      //       if (result[i]._id) {
+      //         throw new Error('_id is set');
+      //       }
+      //       if (result[i]._rev) {
+      //         throw new Error('_rev is set');
+      //       }
+      //     }
+      //   });
+      //
+      //   test('key is set', function() {
+      //     const result = element._prepareRequestsList(data);
+      //     for (let i = 0, len = result.length; i < len; i++) {
+      //       assert.typeOf(result[i].key, 'string');
+      //     }
+      //   });
+      //
+      //   test('legacyProject is removed', function() {
+      //     data[0].legacyProject = 'abc';
+      //     delete data[0].projects;
+      //     const result = element._prepareRequestsList(data);
+      //     assert.isUndefined(result[0].legacyProject);
+      //   });
+      //
+      //   test('Creates projects from legacyProject', function() {
+      //     data[0].legacyProject = 'abc';
+      //     delete data[0].projects;
+      //     const result = element._prepareRequestsList(data);
+      //     assert.typeOf(result[0].projects, 'array');
+      //     assert.equal(result[0].projects[0], 'abc');
+      //   });
+      //
+      //   test('Adds to projects from legacyProject', function() {
+      //     data[0].projects = ['test'];
+      //     data[0].legacyProject = 'abc';
+      //     const result = element._prepareRequestsList(data);
+      //     assert.isUndefined(result[0].legacyProject);
+      //     assert.lengthOf(result[0].projects, 2);
+      //   });
+      //
+      //   test('kind property is set', function() {
+      //     const result = element._prepareRequestsList(data);
+      //     assert.equal(result[0].kind, 'ARC#RequestData');
+      //   });
+      // });
+      //
+      // suite('_prepareProjectsList()', function() {
+      //   let data;
+      //
+      //   setup(function() {
+      //     element = fixture('Basic');
+      //     data = DataGenerator.generateProjects({
+      //       projectsSize: 5
+      //     });
+      //     data = mockRev(data);
+      //   });
+      //
+      //   test('Result is an array', function() {
+      //     const result = element._prepareProjectsList(data);
+      //     assert.typeOf(result, 'array');
+      //   });
+      //
+      //   test('_rev and _id is removed', function() {
+      //     const result = element._prepareProjectsList(data);
+      //     for (let i = 0, len = result.length; i < len; i++) {
+      //       if (result[i]._id) {
+      //         throw new Error('_id is set');
+      //       }
+      //       if (result[i]._rev) {
+      //         throw new Error('_rev is set');
+      //       }
+      //     }
+      //   });
+      //
+      //   test('key is set', function() {
+      //     const ids = data.map((item) => item._id);
+      //     const result = element._prepareProjectsList(data);
+      //     for (let i = 0, len = result.length; i < len; i++) {
+      //       if (result[i].key !== ids[i]) {
+      //         throw new Error('Key is not set');
+      //       }
+      //     }
+      //   });
+      //
+      //   test('kind property is set', function() {
+      //     const result = element._prepareProjectsList(data);
+      //     assert.equal(result[0].kind, 'ARC#ProjectData');
+      //   });
+      // });
+      //
+      // suite('_prepareHistoryDataList()', function() {
+      //   let result;
+      //
+      //   setup(function() {
+      //     element = fixture('Basic');
+      //     let data = DataGenerator.generateHistoryRequestsData();
+      //     data = mockRev(data);
+      //     result = element._prepareHistoryDataList(data);
+      //   });
+      //
+      //   test('Result is an array', function() {
+      //     assert.typeOf(result, 'array');
+      //   });
+      //
+      //   test('_rev and _id is removed', function() {
+      //     for (let i = 0, len = result.length; i < len; i++) {
+      //       if (result[i]._id) {
+      //         throw new Error('_id is set');
+      //       }
+      //       if (result[i]._rev) {
+      //         throw new Error('_rev is set');
+      //       }
+      //     }
+      //   });
+      //
+      //   test('kind property is set', function() {
+      //     assert.equal(result[0].kind, 'ARC#HistoryData');
+      //   });
+      // });
 
-        setup(function() {
-          element = fixture('Basic');
-          const projects = DataGenerator.generateProjects({
-            projectsSize: 20
+      suite('createExportObject()', function() {
+        suite('Base properties()', () => {
+          let opts = {};
+
+          setup(function() {
+            element = fixture('Basic');
           });
-          data = DataGenerator.generateRequests({
-            requestsSize: 20,
-            projects: projects
+
+          test('Sets createdAt property', function() {
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.typeOf(result.createdAt, 'string');
+            });
           });
-          data = mockRev(data);
-        });
 
-        test('Result is an array', function() {
-          const result = element._prepareRequestsList(data);
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed', function() {
-          const result = element._prepareRequestsList(data);
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-          }
-        });
-
-        test('key is set', function() {
-          const result = element._prepareRequestsList(data);
-          for (let i = 0, len = result.length; i < len; i++) {
-            assert.typeOf(result[i].key, 'string');
-          }
-        });
-
-        test('legacyProject is removed', function() {
-          data[0].legacyProject = 'abc';
-          delete data[0].projects;
-          const result = element._prepareRequestsList(data);
-          assert.isUndefined(result[0].legacyProject);
-        });
-
-        test('Creates projects from legacyProject', function() {
-          data[0].legacyProject = 'abc';
-          delete data[0].projects;
-          const result = element._prepareRequestsList(data);
-          assert.typeOf(result[0].projects, 'array');
-          assert.equal(result[0].projects[0], 'abc');
-        });
-
-        test('Adds to projects from legacyProject', function() {
-          data[0].projects = ['test'];
-          data[0].legacyProject = 'abc';
-          const result = element._prepareRequestsList(data);
-          assert.isUndefined(result[0].legacyProject);
-          assert.lengthOf(result[0].projects, 2);
-        });
-
-        test('kind property is set', function() {
-          const result = element._prepareRequestsList(data);
-          assert.equal(result[0].kind, 'ARC#RequestData');
-        });
-      });
-
-      suite('_prepareProjectsList()', function() {
-        let data;
-
-        setup(function() {
-          element = fixture('Basic');
-          data = DataGenerator.generateProjects({
-            projectsSize: 5
+          test('Default version is set', function() {
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.equal(result.version, 'unknown');
+            });
           });
-          data = mockRev(data);
-        });
 
-        test('Result is an array', function() {
-          const result = element._prepareProjectsList(data);
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed', function() {
-          const result = element._prepareProjectsList(data);
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-          }
-        });
-
-        test('key is set', function() {
-          const ids = data.map((item) => item._id);
-          const result = element._prepareProjectsList(data);
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i].key !== ids[i]) {
-              throw new Error('Key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          const result = element._prepareProjectsList(data);
-          assert.equal(result[0].kind, 'ARC#ProjectData');
-        });
-      });
-
-      suite('_prepareHistoryDataList()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateHistoryRequestsData();
-          data = mockRev(data);
-          result = element._prepareHistoryDataList(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#HistoryData');
-        });
-      });
-
-      suite('_prepareVariablesData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateVariablesData();
-          data = mockRev(data);
-          result = element._prepareVariablesData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-          }
-        });
-
-        test('Contains key property', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            assert.typeOf(result[i].key, 'string');
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#Variable');
-        });
-      });
-
-      suite('_prepareHeadersSetsData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateHeadersSetsData();
-          data = mockRev(data);
-          result = element._prepareHeadersSetsData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-          }
-        });
-
-        test('Contains key property', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            assert.typeOf(result[i].key, 'string');
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#HeadersSet');
-        });
-      });
-
-      suite('_prepareWsUrlHistoryData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateUrlsData();
-          data = mockRev(data);
-          result = element._prepareWsUrlHistoryData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed, key is added', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-            if (!result[i].key) {
-              throw new Error('key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#WebsocketHistoryData');
-        });
-      });
-
-      suite('_prepareUrlHistoryData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateUrlsData();
-          data = mockRev(data);
-          result = element._prepareUrlHistoryData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed, key is added', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-            if (!result[i].key) {
-              throw new Error('key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#UrlHistoryData');
-        });
-      });
-
-      suite('_prepareAuthData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateBasicAuthData();
-          data = mockRev(data);
-          result = element._prepareAuthData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed, key is added', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-            if (!result[i].key) {
-              throw new Error('key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#AuthData');
-        });
-      });
-
-      suite('_prepareCookieData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateCookiesData();
-          data = mockRev(data);
-          result = element._prepareCookieData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed, key is added', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-            if (!result[i].key) {
-              throw new Error('key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#Cookie');
-        });
-      });
-
-      suite('_prepareHostRulesData()', function() {
-        let result;
-
-        setup(function() {
-          element = fixture('Basic');
-          let data = DataGenerator.generateHostRulesData();
-          data = mockRev(data);
-          result = element._prepareHostRulesData(data);
-        });
-
-        test('Result is an array', function() {
-          assert.typeOf(result, 'array');
-        });
-
-        test('_rev and _id is removed, key is added', function() {
-          for (let i = 0, len = result.length; i < len; i++) {
-            if (result[i]._id) {
-              throw new Error('_id is set');
-            }
-            if (result[i]._rev) {
-              throw new Error('_rev is set');
-            }
-            if (!result[i].key) {
-              throw new Error('key is not set');
-            }
-          }
-        });
-
-        test('kind property is set', function() {
-          assert.equal(result[0].kind, 'ARC#HostRule');
-        });
-      });
-
-      suite('createExportObject', function() {
-        let opts = {};
-
-        setup(function() {
-          element = fixture('Basic');
-          opts.cookies = mockRev(DataGenerator.generateCookiesData());
-          opts['auth-data'] = mockRev(DataGenerator.generateBasicAuthData());
-          opts['url-history'] = mockRev(DataGenerator.generateUrlsData());
-          opts['websocket-url-history'] = mockRev(DataGenerator.generateUrlsData());
-          opts['headers-sets'] = mockRev(DataGenerator.generateHeadersSetsData());
-          opts.variables = mockRev(DataGenerator.generateVariablesData());
-          opts.history = mockRev(DataGenerator.generateHistoryRequestsData());
-          opts['host-rules'] = mockRev(DataGenerator.generateHostRulesData());
-          const projects = DataGenerator.generateProjects({
-            projectsSize: 20
+          test('Sets version from attribute', function() {
+            element.appVersion = 'test-version';
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.equal(result.version, 'test-version');
+            });
           });
-          const requests = DataGenerator.generateRequests({
-            requestsSize: 20,
-            projects: projects
+        });
+
+        [
+          ['History', 'history', 'generateHistoryRequestsData', 'ARC#HistoryData'],
+          ['Host rules', 'host-rules', 'generateHostRulesData', 'ARC#HostRule'],
+          ['Variables', 'variables', 'generateVariablesData', 'ARC#Variable'],
+          ['Websockets URL history', 'websocket-url-history', 'generateUrlsData', 'ARC#WebsocketHistoryData'],
+          ['URL History', 'url-history', 'generateUrlsData', 'ARC#UrlHistoryData'],
+          ['Auth', 'auth-data', 'generateBasicAuthData', 'ARC#AuthData'],
+          ['Cookies', 'cookies', 'generateCookiesData', 'ARC#Cookie'],
+          ['Projects', 'projects', 'generateProjects', 'ARC#ProjectData'],
+          ['Requests basic', 'requests', 'generateRequests', 'ARC#RequestData']
+        ].forEach((item) => {
+          suite(`${item[0]} data`, () => {
+            const property = item[1];
+            let opts = {};
+            setup(function() {
+              element = fixture('Basic');
+              opts[property] = mockRev(DataGenerator[item[2]]());
+            });
+
+            test(`${property} is set`, function() {
+              return element.createExportObject(opts)
+              .then((result) => {
+                assert.typeOf(result[property], 'array');
+                assert.lengthOf(result[property], opts[property].length);
+                assert.isUndefined(result[property][0]._rew, 'Array was processed');
+              });
+            });
+
+            test('Result is an array', function() {
+              return element.createExportObject(opts)
+              .then((result) => {
+                assert.typeOf(result[property], 'array');
+              });
+            });
+
+            test('_rev and _id is removed, key is added', function() {
+              return element.createExportObject(opts)
+              .then((result) => {
+                const data = result[property];
+                for (let i = 0, len = data.length; i < len; i++) {
+                  assert.isUndefined(data[i]._id);
+                  assert.isUndefined(data[i]._rev);
+                  assert.typeOf(data[i].key, 'string');
+                }
+              });
+            });
+
+            test('kind property is set', function() {
+              return element.createExportObject(opts)
+              .then((result) => {
+                assert.equal(result[property][0].kind, item[3]);
+              });
+            });
           });
-          opts.projects = mockRev(projects);
-          opts.requests = mockRev(requests);
         });
 
-        test('Sets createdAt property', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.createdAt, 'string');
+        suite('Requests and saved', () => {
+          let opts;
+          setup(function() {
+            element = fixture('Basic');
+            opts = {};
+          });
+
+          test('Uses "saved" as requests', () => {
+            opts.saved = mockRev(DataGenerator.generateRequests());
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.lengthOf(result.requests, opts.saved.length);
+            });
+          });
+
+          test('Combines saved and requests', () => {
+            opts.saved = mockRev(DataGenerator.generateRequests());
+            opts.requests = mockRev(DataGenerator.generateRequests());
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.lengthOf(result.requests, (opts.saved.length + opts.requests.length));
+            });
+          });
+
+          test('Creates "projects" from legacyProject', () => {
+            opts.requests = mockRev(DataGenerator.generateRequests());
+            opts.requests[0].legacyProject = 'test-project';
+            opts.requests[0].projects = undefined;
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.lengthOf(result.requests[0].projects, 1);
+              assert.isUndefined(result.requests[0].legacyProject);
+            });
+          });
+
+          test('Adds legacyProject to "projects"', () => {
+            opts.requests = mockRev(DataGenerator.generateRequests());
+            opts.requests[0].legacyProject = 'test-project';
+            opts.requests[0].projects = ['test-other'];
+            return element.createExportObject(opts)
+            .then((result) => {
+              assert.deepEqual(result.requests[0].projects, ['test-other', 'test-project']);
+              assert.isUndefined(result.requests[0].legacyProject);
+            });
+          });
+        });
+      });
+
+      suite('arcExport()', () => {
+        setup(function() {
+          element = fixture('Basic');
         });
 
-        test('Default version is set', function() {
-          const result = element.createExportObject(opts);
-          assert.equal(result.version, 'unknown');
+        test('Rejects when no "options"', () => {
+          return element.arcExport({})
+          .then(() => {
+            throw new Error('Should not resolve');
+          })
+          .catch((cause) => {
+            assert.typeOf(cause.message, 'string');
+            assert.equal(cause.message, 'The "options" property is not set.');
+          });
         });
 
-        test('Sets version from attribute', function() {
-          element.appVersion = 'test-version';
-          const result = element.createExportObject(opts);
-          assert.equal(result.version, 'test-version');
+        test('Rejects when no "options.provider"', () => {
+          return element.arcExport({
+            options: {}
+          })
+          .then(() => {
+            throw new Error('Should not resolve');
+          })
+          .catch((cause) => {
+            assert.typeOf(cause.message, 'string');
+            assert.equal(cause.message, 'The "options.provider" property is not set.');
+          });
         });
 
-        test('Cookies are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.cookies, 'array');
-          assert.lengthOf(result.cookies, opts.cookies.length);
-          assert.isUndefined(result.cookies[0]._rew, 'Array was processed');
-        });
-
-        test('auth-data are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result['auth-data'], 'array');
-          assert.lengthOf(result['auth-data'], opts['auth-data'].length);
-          assert.isUndefined(result['auth-data'][0]._rew, 'Array was processed');
-        });
-
-        test('url-history are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result['url-history'], 'array');
-          assert.lengthOf(result['url-history'], opts['url-history'].length);
-          assert.isUndefined(result['url-history'][0]._rew, 'Array was processed');
-        });
-
-        test('websocket-url-history are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result['websocket-url-history'], 'array');
-          assert.lengthOf(result['websocket-url-history'], opts['websocket-url-history'].length);
-          assert.isUndefined(result['websocket-url-history'][0]._rew, 'Array was processed');
-        });
-
-        test('headers-sets are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result['headers-sets'], 'array');
-          assert.lengthOf(result['headers-sets'], opts['headers-sets'].length);
-          assert.isUndefined(result['headers-sets'][0]._rew, 'Array was processed');
-        });
-
-        test('variables are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.variables, 'array');
-          assert.lengthOf(result.variables, opts.variables.length);
-          assert.isUndefined(result.variables[0]._rew, 'Array was processed');
-        });
-
-        test('history are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.history, 'array');
-          assert.lengthOf(result.history, opts.history.length);
-          assert.isUndefined(result.history[0]._rew, 'Array was processed');
-        });
-
-        test('projects are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.projects, 'array');
-          assert.lengthOf(result.projects, opts.projects.length);
-          assert.isUndefined(result.projects[0]._rew, 'Array was processed');
-        });
-
-        test('requests are set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result.requests, 'array');
-          assert.lengthOf(result.requests, opts.requests.length);
-          assert.isUndefined(result.requests[0]._rew, 'Array was processed');
-        });
-
-        test('host-rules is set', function() {
-          const result = element.createExportObject(opts);
-          assert.typeOf(result['host-rules'], 'array');
-          assert.lengthOf(result['host-rules'], opts['host-rules'].length);
-          assert.isUndefined(result['host-rules'][0]._rew, 'Array was processed');
+        test('Rejects when no "options.file"', () => {
+          return element.arcExport({
+            options: {
+              provider: 'file'
+            }
+          })
+          .then(() => {
+            throw new Error('Should not resolve');
+          })
+          .catch((cause) => {
+            assert.typeOf(cause.message, 'string');
+            assert.equal(cause.message, 'The "options.file" property is not set.');
+          });
         });
       });
     });

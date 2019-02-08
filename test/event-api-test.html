@@ -21,9 +21,10 @@
 
     <script>
     /* global DataHelper, DataGenerator */
-    suite('Exporting data - events API', function() {
-      function fire(detail) {
-        const e = new CustomEvent('export-data', {
+    suite('Exporting ARC data - events API', function() {
+      function fire(detail, type) {
+        type = type || 'arc-data-export';
+        const e = new CustomEvent(type, {
           detail,
           bubbles: true,
           composed: true,
@@ -47,8 +48,8 @@
         });
       }
 
-      suite('export-data', function() {
-        const sampleSzie = 15;
+      suite('arc-data-export', function() {
+        const sampleSzie = 5;
 
         suiteSetup(function() {
           this.timeout(20000);
@@ -69,8 +70,10 @@
             e.preventDefault();
           });
           const e = fire({
-            type: 'arc-export',
-            destination: 'file',
+            options: {
+              provider: 'file',
+              file: 'file-123'
+            },
             data: {
               saved: true,
             }
@@ -80,12 +83,15 @@
         });
 
         test('Ignores cancelled events', function() {
-          document.body.addEventListener('export-data', function f(e) {
-            document.body.removeEventListener('export-data', f);
+          document.body.addEventListener('arc-data-export', function f(e) {
+            document.body.removeEventListener('arc-data-export', f);
             e.preventDefault();
           });
           const e = fire({
-            type: 'arc-export',
+            options: {
+              provider: 'file',
+              file: 'file-123'
+            },
             destination: 'file',
             data: {
               saved: true,
@@ -99,8 +105,10 @@
             e.preventDefault();
           });
           const e = fire({
-            type: 'arc-export',
-            destination: 'file',
+            options: {
+              provider: 'file',
+              file: 'file-123'
+            },
             data: {
               saved: true,
             }
@@ -114,12 +122,14 @@
             e.preventDefault();
             const data = e.detail.content;
             assert.typeOf(data.requests, 'array');
-            assert.lengthOf(data.requests, 15);
+            assert.lengthOf(data.requests, 5);
             done();
           });
           const e = fire({
-            type: 'arc-export',
-            destination: 'file',
+            options: {
+              provider: 'file',
+              file: 'file-123'
+            },
             data: {
               saved: true,
             }
@@ -137,11 +147,12 @@
             done();
           });
           const e = fire({
-            type: 'items-export',
-            destination: 'file',
-            file: 'arc-history-export.json',
-            kind: 'ARC#HistoryExport',
-            items: {
+            options: {
+              provider: 'file',
+              file: 'arc-history-export.json',
+              kind: 'ARC#HistoryExport'
+            },
+            data: {
               history: [{
                 _id: 'test',
                 url: 'https://domain.com',
@@ -160,15 +171,16 @@
             e.preventDefault();
             const data = e.detail.content;
             assert.typeOf(data.requests, 'array');
-            assert.lengthOf(data.requests, 15);
+            assert.lengthOf(data.requests, 5);
             assert.equal(e.detail.file, 'test-file');
-            assert.equal(e.detail.contentType, 'application/json');
+            assert.equal(e.detail.options.contentType, 'application/json');
             done();
           });
           const e = fire({
-            type: 'arc-export',
-            destination: 'drive',
-            file: 'test-file',
+            options: {
+              provider: 'drive',
+              file: 'test-file'
+            },
             data: {
               saved: true,
             }
@@ -177,18 +189,21 @@
           .catch((cause) => done(cause));
         });
 
-        test('Calls dataExport() for default type', function() {
+        test('Calls dataExport() for export-data', function(done) {
+          const spy = sinon.spy(element, 'dataExport');
           waitUntilFileEvent((e) => {
             e.preventDefault();
+            assert.isTrue(spy.called);
+            done();
           });
-          const spy = sinon.spy(element, 'dataExport');
+
           fire({
             destination: 'file',
+            file: 'test-file',
             data: {
-              saved: true,
+              test: true
             }
-          });
-          assert.isTrue(spy.called);
+          }, 'export-data');
         });
       });
     });

@@ -12,6 +12,7 @@ License for the specific language governing permissions and limitations under
 the License.
 -->
 <link rel="import" href="../polymer/polymer-element.html">
+<dom-module id="arc-data-export">
 <script>
 /**
  * An element to handle data export for ARC.
@@ -21,7 +22,9 @@ the License.
  * @memberof LogicElements
  */
 class ArcDataExport extends Polymer.Element {
-  static get is() {return 'arc-data-export';}
+  static get is() {
+    return 'arc-data-export';
+  }
   static get properties() {
     return {
       /**
@@ -46,36 +49,46 @@ class ArcDataExport extends Polymer.Element {
   constructor() {
     super();
     this._exportHandler = this._exportHandler.bind(this);
+    this._arcExportHandler = this._arcExportHandler.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
     window.addEventListener('export-data', this._exportHandler);
+    window.addEventListener('arc-data-export', this._arcExportHandler);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     window.removeEventListener('export-data', this._exportHandler);
+    window.removeEventListener('arc-data-export', this._arcExportHandler);
+    if (this._worker) {
+      this._worker = undefined;
+    }
   }
-
+  /**
+   * Handler for the `export-data` custom event.
+   * This event is not meant to be used to export ARC datstre data.
+   * @param {CustomEvent} e
+   */
   _exportHandler(e) {
     if (e.defaultPrevented) {
       return;
     }
     e.preventDefault();
-    let result;
-    switch (e.detail.type) {
-      case 'arc-export':
-        result = this.arcExport(e.detail);
-        break;
-      case 'items-export':
-        result = this.itemsExport(e.detail);
-        break;
-      default:
-        result = this.dataExport(e.detail);
-        break;
+    e.detail.result = this.dataExport(e.detail);
+  }
+  /**
+   * Handler for `arc-data-export` event that exports ARC data
+   * (settings, requests, project, etc).
+   * @param {CustomEvent} e Event dispatched by element requesting the export.
+   */
+  _arcExportHandler(e) {
+    if (e.defaultPrevented) {
+      return;
     }
-    e.detail.result = result;
+    e.preventDefault();
+    e.detail.result = this.arcExport(e.detail);
   }
 
   dataExport(opts) {
@@ -83,23 +96,30 @@ class ArcDataExport extends Polymer.Element {
     const destination = opts.destination;
     let data = opts.data;
     switch (destination) {
-      case 'file': return this._exportFile(data, file);
-      case 'drive': return this._exportDrive(data, file);
+      case 'file': return this._exportFile(data, file, opts.providerOptions);
+      case 'drive': return this._exportDrive(data, file, opts.providerOptions);
       default: return Promise.reject(`Unknown destination ${destination}`);
     }
   }
   /**
    * Generates and saves ARC export object from user data.
-   * @param {Object} opts Export options. See
+   * @param {Object} detail Export configuration. See
    * https://github.com/advanced-rest-client/api-components-api/blob/master/docs/export-event.md
    * for details.
    * @return {Promise} Promise resolved to a result of saving a file.
    * Google Drive results with create response.
    */
-  arcExport(opts) {
-    const file = opts.file || 'arc-data-export.json';
-    const destination = opts.destination;
-    const data = opts.data;
+  arcExport(detail) {
+    const {data, options, providerOptions} = detail;
+    if (!options) {
+      return Promise.reject(new Error('The "options" property is not set.'));
+    }
+    if (!options.provider) {
+      return Promise.reject(new Error('The "options.provider" property is not set.'));
+    }
+    if (!options.file) {
+      return Promise.reject(new Error('The "options.file" property is not set.'));
+    }
     const dataKeys = Object.keys(data);
     const exportData = {};
     let databases = [];
@@ -133,99 +153,76 @@ class ArcDataExport extends Polymer.Element {
       });
       return exportData;
     })
-    .then((exportData) => this.createExportObject(exportData))
+    .then((exportData) => this.createExportObject(exportData, options))
     .then((data) => {
-      switch (destination) {
-        case 'file': return this._exportFile(data, file);
-        case 'drive': return this._exportDrive(data, file);
-        default: return Promise.reject(new Error(`Unknown destination ${destination}`));
+      switch (options.provider) {
+        case 'file': return this._exportFile(data, options.file, providerOptions);
+        case 'drive': return this._exportDrive(data, options.file, providerOptions);
+        default: return Promise.reject(new Error(`Unknown destination ${options.provider}`));
       }
     });
   }
   /**
-   * Exports data that are already retreived from the datastore.
-   * It calls `createExportObject` to prepare arc export object so the `items`
-   * object set on the `opts` has to have the same structure as the function's
-   * only argument.
-   * @param {Object} opts Export options:
-   * - `file` (String) Optional. Export file name.
-   * - `destination` (String) `drive` or `file`.
-   * - `items` (Object) The same structore as `opts` argument for `createExportObject()`
-   * - `kind` (String) Opional. Export item kind property.
-   * @return {Promise}
-   */
-  itemsExport(opts) {
-    const file = opts.file || 'arc-data-export.json';
-    const destination = opts.destination;
-    const items = opts.items;
-    if (opts.kind) {
-      items.kind = opts.kind;
-    }
-    const data = this.createExportObject(items);
-    switch (destination) {
-      case 'file': return this._exportFile(data, file);
-      case 'drive': return this._exportDrive(data, file);
-      default: return Promise.reject(`Unknown destination ${destination}`);
-    }
-  }
-  /**
    * Creates an export object for the data.
    *
-   * @param {Object} opts Export options. Available keys:
+   * @param {Object} data Export options. Available keys:
    * -   `requests` (Array) List of requests to export
    * -   `projects` (Array) List of projects to export
    * -   `history` (Array) List of history requests to export
    * -   `websocket-url-history` (Array) List of url history object for WS to export
    * -   `url-history` (Array) List of URL history objects to export
    * -   `variables` (Array) List of variables to export
-   * -   `headers-sets` (Array) List of the headers sets objects to export
    * -   `auth-data` (Array) List of the auth data objects to export
    * -   `cookies` (Array) List of cookies to export
    * -   `kind` (String) The `kind` property of the top export declaration.
    *      Default to `ARC#AllDataExport`
+   * @param {Object} options Export configuration object
    * @return {Object} ARC export object declaration.
    */
-  createExportObject(opts) {
-    opts = opts || {};
-    const appVersion = this.appVersion;
-    const result = {
-      createdAt: new Date().toISOString(),
-      version: appVersion,
-      kind: opts.kind || 'ARC#AllDataExport'
-    };
-    if (opts.requests && opts.requests.length) {
-      result.requests = this._prepareRequestsList(opts.requests);
+  createExportObject(data, options) {
+    options = options || {};
+    if (options) {
+      options = Object.assign({}, options);
+    } else {
+      options = {};
     }
-    if (opts.projects && opts.projects.length) {
-      result.projects = this._prepareProjectsList(opts.projects);
+    options.appVersion = this.appVersion || 'Unknown version';
+    if (!options.kind) {
+      options.kind = 'ARC#AllDataExport';
     }
-    if (opts.history && opts.history.length) {
-      result.history = this._prepareHistoryDataList(opts.history);
+    return new Promise((resolve, reject) => {
+      const worker = this._ensureWorker();
+      const callbacks = {
+        err: (e) => {
+          worker.removeEventListener('message', callbacks.data);
+          worker.removeEventListener('error', callbacks.err);
+          const err = e.message.replace('Uncaught Error: ', '');
+          reject(err);
+        },
+        data: (e) => {
+          worker.removeEventListener('message', callbacks.data);
+          worker.removeEventListener('error', callbacks.err);
+          resolve(e.data);
+        }
+      };
+      worker.addEventListener('message', callbacks.data);
+      worker.addEventListener('error', callbacks.err);
+      worker.postMessage({data, options});
+    });
+  }
+  /**
+   * Creates a worker and references it as `_worker` property.
+   *
+   * @return {Worker} Reference to the data processing worker/
+   */
+  _ensureWorker() {
+    if (this._worker) {
+      return this._worker;
     }
-    const wsHistory = opts['websocket-url-history'];
-    if (wsHistory && wsHistory.length) {
-      result['websocket-url-history'] = this._prepareWsUrlHistoryData(wsHistory);
-    }
-    const urlHistory = opts['url-history'];
-    if (urlHistory && urlHistory.length) {
-      result['url-history'] = this._prepareUrlHistoryData(urlHistory);
-    }
-    if (opts.variables && opts.variables.length) {
-      result.variables = this._prepareVariablesData(opts.variables);
-    }
-    if (('headers-sets' in opts) && opts['headers-sets'].length) {
-      result['headers-sets'] = this._prepareHeadersSetsData(opts['headers-sets']);
-    }
-    if (('auth-data' in opts) && opts['auth-data'].length) {
-      result['auth-data'] = this._prepareAuthData(opts['auth-data']);
-    }
-    if (opts.cookies && opts.cookies.length) {
-      result.cookies = this._prepareCookieData(opts.cookies);
-    }
-    if (('host-rules' in opts) && opts['host-rules'].length) {
-      result['host-rules'] = this._prepareHostRulesData(opts['host-rules']);
-    }
-    return result;
+    const url = this.importPath + 'workers/data-processing.js';
+    const worker = new Worker(url);
+    this._worker = worker;
+    return this._worker;
   }
   /**
    * A function used with `electronCookies` flag.
@@ -264,130 +261,6 @@ class ArcDataExport extends Polymer.Element {
     this.dispatchEvent(e);
     return e;
   }
-
-  _prepareRequestsList(requests) {
-    const result = requests.map((item) => {
-      if (item.legacyProject) {
-        if (item.projects) {
-          item.projects[item.projects.length] = item.legacyProject;
-        } else {
-          item.projects = [item.legacyProject];
-        }
-        delete item.legacyProject;
-      }
-      item.kind = 'ARC#RequestData';
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      return item;
-    });
-    return result;
-  }
-
-  _prepareProjectsList(projects) {
-    return projects.map((item) => {
-      item.kind = 'ARC#ProjectData';
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      return item;
-    });
-  }
-
-  _prepareHistoryDataList(history) {
-    const result = history.map((item) => {
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#HistoryData';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareWsUrlHistoryData(history) {
-    const result = history.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#WebsocketHistoryData';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareUrlHistoryData(history) {
-    const result = history.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#UrlHistoryData';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareVariablesData(variables) {
-    const result = [];
-    variables.forEach((item) => {
-      if (!item.environment) {
-        // PouchDB creates some views in the main datastore and it is added to
-        // get all docs function without any reason. It should be eleminated
-        return;
-      }
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#Variable';
-      result.push(item);
-    });
-    return result;
-  }
-
-  _prepareHeadersSetsData(sets) {
-    const result = sets.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#HeadersSet';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareAuthData(authData) {
-    const result = authData.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#AuthData';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareCookieData(authData) {
-    const isElectron = this.electronCookies;
-    const result = authData.map((item) => {
-      if (!isElectron) {
-        item.key = item._id;
-        delete item._rev;
-        delete item._id;
-      }
-      item.kind = 'ARC#Cookie';
-      return item;
-    });
-    return result;
-  }
-
-  _prepareHostRulesData(hostRules) {
-    return hostRules.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#HostRule';
-      return item;
-    });
-  }
   /**
    * Checks if `type` is one of the allowed export types defined in
    * `exportType`.
@@ -401,7 +274,7 @@ class ArcDataExport extends Polymer.Element {
     if (exportType instanceof Array) {
       return exportType.indexOf(type) !== -1;
     }
-    return exportType === type || exportType === 'all';
+    return exportType === type || exportType === 'all' || exportType === true;
   }
   /**
    * Creats a map of database name <--> export object key name mapping.
@@ -428,9 +301,6 @@ class ArcDataExport extends Polymer.Element {
     }
     if (this._isAllowedExport(type, 'variables')) {
       databases.variables = 'variables';
-    }
-    if (this._isAllowedExport(type, 'headers-sets')) {
-      databases['headers-sets'] = 'headers-sets';
     }
     if (this._isAllowedExport(type, 'auth')) {
       databases['auth-data'] = 'auth-data';
@@ -485,17 +355,24 @@ class ArcDataExport extends Polymer.Element {
    *
    * @param {Object|String} data Data to export
    * @param {String} file File name
+   * @param {Object} options Provider options
    * @return {Promise}
    */
-  _exportFile(data, file) {
+  _exportFile(data, file, options) {
+    if (!options) {
+      options = {};
+    }
+    if (!options.contentType) {
+      options.contentType = 'application/json';
+    }
     const e = new CustomEvent('file-data-save', {
       cancelable: true,
       bubbles: true,
       composed: true,
       detail: {
-        contentType: 'application/json',
         content: data,
-        file
+        file,
+        options
       }
     });
     this.dispatchEvent(e);
@@ -509,17 +386,24 @@ class ArcDataExport extends Polymer.Element {
    *
    * @param {Object|String} data Data to export
    * @param {String} file File name
+   * @param {Object} options Provider options
    * @return {Promise}
    */
-  _exportDrive(data, file) {
+  _exportDrive(data, file, options) {
+    if (!options) {
+      options = {};
+    }
+    if (!options.contentType) {
+      options.contentType = 'application/json';
+    }
     const e = new CustomEvent('google-drive-data-save', {
       cancelable: true,
       bubbles: true,
       composed: true,
       detail: {
-        contentType: 'application/json',
         content: data,
-        file
+        file,
+        options
       }
     });
     this.dispatchEvent(e);
@@ -547,3 +431,4 @@ class ArcDataExport extends Polymer.Element {
 }
 window.customElements.define(ArcDataExport.is, ArcDataExport);
 </script>
+</dom-module>

@@ -60,7 +60,6 @@
           ['websocket', 'websocket', 'websocket-url-history'],
           ['url history', 'url-history', 'url-history'],
           ['variables', 'variables', 'variables'],
-          ['headers sets', 'headers-sets', 'headers-sets'],
           ['authorization', 'auth', 'auth-data'],
           ['cookies', 'cookies', 'cookies'],
           ['host rules', 'host-rules', 'host-rules']
@@ -76,7 +75,10 @@
             const data = {};
             data[item[1]] = true;
             element.arcExport({
-              destination,
+              options: {
+                provider: destination,
+                file: 'test-123',
+              },
               data
             });
           });
@@ -97,7 +99,10 @@
             requestsSize: 5
           });
           element.arcExport({
-            destination,
+            options: {
+              provider: destination,
+              file: 'test-123',
+            },
             data
           });
         });
@@ -111,7 +116,10 @@
             done();
           });
           element.arcExport({
-            destination,
+            options: {
+              provider: destination,
+              file: 'test-123',
+            },
             data: {
               history: DataGenerator.generateHistoryRequestsData({
                 requestsSize: 5
@@ -204,106 +212,6 @@
           data: {}
         });
         assert.deepEqual(spy.args[0][1], 'test-file');
-        return result;
-      });
-    });
-
-    suite('itemsExport()', () => {
-      let element;
-      setup(function() {
-        element = fixture('Basic');
-      });
-
-      test('Calls _exportFile for file destination', () => {
-        waitUntilFileEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, '_exportFile');
-        const result = element.itemsExport({
-          destination: 'file',
-          items: {}
-        });
-        assert.isTrue(spy.called);
-        return result;
-      });
-
-      test('Calls _exportDrive for file destination', () => {
-        waitUntilDriveEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, '_exportDrive');
-        const result = element.itemsExport({
-          destination: 'drive',
-          items: {}
-        });
-        assert.isTrue(spy.called);
-        return result;
-      });
-
-      test('Rejects when destination is unknown', () => {
-        return element.itemsExport({
-          items: {}
-        })
-        .then(() => {
-          throw new Error('Should not resolve.');
-        })
-        .catch((cause) => {
-          assert.notEqual(cause.message, 'Should not resolve.');
-        });
-      });
-
-      test('Uses default file name', () => {
-        waitUntilFileEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, '_exportFile');
-        const result = element.itemsExport({
-          destination: 'file',
-          items: {}
-        });
-        assert.deepEqual(spy.args[0][1], 'arc-data-export.json');
-        return result;
-      });
-
-      test('Uses passed file name', () => {
-        waitUntilFileEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, '_exportFile');
-        const result = element.itemsExport({
-          destination: 'file',
-          file: 'test-file',
-          items: {}
-        });
-        assert.deepEqual(spy.args[0][1], 'test-file');
-        return result;
-      });
-
-      test('Uses passed kind parameter', () => {
-        waitUntilFileEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, '_exportFile');
-        const result = element.itemsExport({
-          destination: 'file',
-          kind: 'test-kind',
-          items: {}
-        });
-        assert.deepEqual(spy.args[0][0].kind, 'test-kind');
-        return result;
-      });
-
-      test('Calls createExportObject', () => {
-        waitUntilFileEvent((e) => {
-          e.preventDefault();
-        });
-        const spy = sinon.spy(element, 'createExportObject');
-        const result = element.itemsExport({
-          destination: 'file',
-          kind: 'test-kind',
-          items: {}
-        });
-        assert.isTrue(spy.called);
         return result;
       });
     });

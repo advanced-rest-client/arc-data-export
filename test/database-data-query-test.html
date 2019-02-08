@@ -101,17 +101,6 @@
         });
       });
 
-      test('Gets all headers-sets data', function() {
-        return element._getDatabaseEntries('headers-sets')
-        .then((result) => {
-          assert.typeOf(result, 'object', 'result is an object');
-          assert.equal(result.name, 'headers-sets', 'Name is set');
-          assert.typeOf(result.data, 'array', 'Data is an array');
-          assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-          assert.typeOf(result.data[0].headers, 'string', 'Is a headers set item');
-        });
-      });
-
       test('Gets all cookies data', function() {
         return element._getDatabaseEntries('cookies')
         .then((result) => {
@@ -133,64 +122,6 @@
           assert.equal(result.data[0].type, 'basic', 'Is an auth data item');
         });
       });
-
-      // test('prepares export for a single database', function() {
-      //   const opts = {
-      //     type: 'auth'
-      //   };
-      //   return element.prepareExport(opts)
-      //   .then((result) => {
-      //     assert.typeOf(result, 'object', 'result is an object');
-      //     assert.equal(result.version, 'unknown', 'version is unknown');
-      //     assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-      //     assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
-      //     assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
-      //   });
-      // });
-      //
-      // test('prepares export for a multiple databases', function() {
-      //   const opts = {
-      //     type: ['history', 'saved', 'websocket', 'history-url', 'auth', 'host-rules']
-      //   };
-      //   return element.prepareExport(opts)
-      //   .then((result) => {
-      //     assert.typeOf(result, 'object', 'result is an object');
-      //     assert.equal(result.version, 'unknown', 'version is unknown');
-      //     assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-      //     assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
-      //     assert.typeOf(result.history, 'array', 'history is an array');
-      //     assert.typeOf(result.requests, 'array', 'requests is an array');
-      //     assert.typeOf(result.projects, 'array', 'projects is an array');
-      //     assert.typeOf(result['websocket-url-history'], 'array', 'websocket-url-history is an array');
-      //     assert.typeOf(result['url-history'], 'array', 'url-history is an array');
-      //     assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
-      //     assert.typeOf(result['host-rules'], 'array', 'host-rules is an array');
-      //   });
-      // });
-      //
-      // test('prepares export for a all databases', function() {
-      //   const opts = {
-      //     type: 'all'
-      //   };
-      //   return element.prepareExport(opts)
-      //   .then((result) => {
-      //     assert.typeOf(result, 'object', 'result is an object');
-      //     assert.equal(result.version, 'unknown', 'version is unknown');
-      //     assert.typeOf(result.createdAt, 'string', 'createdAt is set');
-      //     assert.equal(result.kind, 'ARC#AllDataExport', 'default kind is set');
-      //
-      //     assert.typeOf(result.history, 'array', 'history is an array');
-      //     assert.typeOf(result.requests, 'array', 'requests is an array');
-      //     assert.typeOf(result.projects, 'array', 'projects is an array');
-      //     assert.typeOf(result['websocket-url-history'], 'array', 'websocket-url-history is an array');
-      //     assert.typeOf(result['url-history'], 'array', 'url-history is an array');
-      //     assert.typeOf(result['auth-data'], 'array', 'auth-data is an array');
-      //     assert.typeOf(result.variables, 'array', 'variables is an array');
-      //     assert.typeOf(result.cookies, 'array', 'cookies is an array');
-      //     assert.typeOf(result['headers-sets'], 'array', 'headers-sets is an array');
-      //     assert.typeOf(result['host-rules'], 'array', 'host-rules is an array');
-      //   });
-      // });
     });
     </script>
 
