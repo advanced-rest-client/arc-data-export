@@ -168,3 +168,34 @@
 
 
 
+## [2.0.1](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.3...2.0.1) (2019-02-16)
+
+
+### Breaking
+
+* Changind the API, adding web worker ([e8518fff918232932e436f6a8e7b4c0b0aeb0b4d](https://github.com/advanced-rest-client/arc-data-export/commit/e8518fff918232932e436f6a8e7b4c0b0aeb0b4d))
+* Redesigning exportf flow ([74a53ee323a5c7fbf913a3c1d2620097f19e3570](https://github.com/advanced-rest-client/arc-data-export/commit/74a53ee323a5c7fbf913a3c1d2620097f19e3570))
+
+### Docs
+
+* Updating docs ([10fda33f815935238fc51f9e6a48fe5ee5d6f534](https://github.com/advanced-rest-client/arc-data-export/commit/10fda33f815935238fc51f9e6a48fe5ee5d6f534))
+* Updating docs ([5a1cd9c0fc2088e86f66a34741a4d8cdcbb02f05](https://github.com/advanced-rest-client/arc-data-export/commit/5a1cd9c0fc2088e86f66a34741a4d8cdcbb02f05))
+* Updating documentation. ([d7c2ed6b8e2db7a6c6f405ee2955a6406c977ab6](https://github.com/advanced-rest-client/arc-data-export/commit/d7c2ed6b8e2db7a6c6f405ee2955a6406c977ab6))
+* Updating polymer docs ([38180202ab6714fb95bd5f36014c271adb80f7ce](https://github.com/advanced-rest-client/arc-data-export/commit/38180202ab6714fb95bd5f36014c271adb80f7ce))
+* Updating Polymer docs ([61956425b5644b41f309388becb17409d7ff6f84](https://github.com/advanced-rest-client/arc-data-export/commit/61956425b5644b41f309388becb17409d7ff6f84))
+
+### Fix
+
+* Fixing event prevented recognition ([9eaa7cdc926a3cef25ed3936ae537028a47384b6](https://github.com/advanced-rest-client/arc-data-export/commit/9eaa7cdc926a3cef25ed3936ae537028a47384b6))
+* Fixing tests ([2588e94123f03e24c0623234667682f69d6b6bc8](https://github.com/advanced-rest-client/arc-data-export/commit/2588e94123f03e24c0623234667682f69d6b6bc8))
+
+### New
+
+* Adding test coverage ([ef1d25b0ce8686cd4cc30526ef2e41a91c39274e](https://github.com/advanced-rest-client/arc-data-export/commit/ef1d25b0ce8686cd4cc30526ef2e41a91c39274e))
+
+### Update
+
+* Fixing mime type setting ([085d7ab75fa156ebdf38aac2c67f906bc8660ed7](https://github.com/advanced-rest-client/arc-data-export/commit/085d7ab75fa156ebdf38aac2c67f906bc8660ed7))
+
+
+
