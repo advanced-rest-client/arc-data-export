@@ -120,7 +120,7 @@
         test('Creates an export object with saved data', function(done) {
           waitUntilFileEvent((e) => {
             e.preventDefault();
-            const data = e.detail.content;
+            const data = JSON.parse(e.detail.content);
             assert.typeOf(data.requests, 'array');
             assert.lengthOf(data.requests, 5);
             done();
@@ -141,7 +141,7 @@
         test('Creates export object with existing data', function(done) {
           waitUntilFileEvent((e) => {
             e.preventDefault();
-            const data = e.detail.content;
+            const data = JSON.parse(e.detail.content);
             assert.typeOf(data.history, 'array');
             assert.lengthOf(data.history, 1);
             done();
@@ -169,11 +169,11 @@
         test('Exports data to Drive', function(done) {
           waitUntilDriveEvent((e) => {
             e.preventDefault();
-            const data = e.detail.content;
+            const data = JSON.parse(e.detail.content);
             assert.typeOf(data.requests, 'array');
             assert.lengthOf(data.requests, 5);
             assert.equal(e.detail.file, 'test-file');
-            assert.equal(e.detail.options.contentType, 'application/json');
+            assert.equal(e.detail.options.contentType, 'application/restclient+data');
             done();
           });
           const e = fire({

@@ -110,7 +110,7 @@ class ArcDataExport extends Polymer.Element {
    * Google Drive results with create response.
    */
   arcExport(detail) {
-    const {data, options, providerOptions} = detail;
+    let {data, options, providerOptions} = detail;
     if (!options) {
       return Promise.reject(new Error('The "options" property is not set.'));
     }
@@ -155,6 +155,11 @@ class ArcDataExport extends Polymer.Element {
     })
     .then((exportData) => this.createExportObject(exportData, options))
     .then((data) => {
+      data = JSON.stringify(data);
+      if (!providerOptions) {
+        providerOptions = {};
+      }
+      providerOptions.contentType = 'application/restclient+data';
       switch (options.provider) {
         case 'file': return this._exportFile(data, options.file, providerOptions);
         case 'drive': return this._exportDrive(data, options.file, providerOptions);
@@ -363,7 +368,7 @@ class ArcDataExport extends Polymer.Element {
       options = {};
     }
     if (!options.contentType) {
-      options.contentType = 'application/json';
+      options.contentType = 'application/restclient+data';
     }
     const e = new CustomEvent('file-data-save', {
       cancelable: true,
@@ -394,7 +399,7 @@ class ArcDataExport extends Polymer.Element {
       options = {};
     }
     if (!options.contentType) {
-      options.contentType = 'application/json';
+      options.contentType = 'application/restclient+data';
     }
     const e = new CustomEvent('google-drive-data-save', {
       cancelable: true,

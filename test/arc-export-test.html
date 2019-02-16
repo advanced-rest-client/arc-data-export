@@ -67,7 +67,7 @@
           test(`Generates ${item[0]} data export`, function(done) {
             waitUntilFileEvent((e) => {
               e.preventDefault();
-              const data = e.detail.content;
+              const data = JSON.parse(e.detail.content);
               assert.typeOf(data[item[2]], 'array');
               assert.lengthOf(data[item[2]], 15);
               done();
@@ -87,7 +87,7 @@
         test('Uses passed requests object', function(done) {
           waitUntilFileEvent((e) => {
             e.preventDefault();
-            const data = e.detail.content;
+            const data = JSON.parse(e.detail.content);
             assert.typeOf(data.requests, 'array');
             assert.typeOf(data.projects, 'array');
             assert.lengthOf(data.requests, 5);
@@ -110,7 +110,7 @@
         test('Uses passed history object', function(done) {
           waitUntilFileEvent((e) => {
             e.preventDefault();
-            const data = e.detail.content;
+            const data = JSON.parse(e.detail.content);
             assert.typeOf(data.history, 'array');
             assert.lengthOf(data.history, 5);
             done();
