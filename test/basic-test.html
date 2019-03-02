@@ -3,12 +3,17 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../chance/dist/chance.min.js"></script>
-    <link rel="import" href="../../app-pouchdb/pouchdb.html">
-    <link rel="import" href="../../arc-data-generator/arc-data-generator.html">
-    <link rel="import" href="../arc-data-export.html">
+
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+
+    <!-- <script src="../../../chance/dist/chance.min.js"></script>
+    <script type="module" src="../../../app-pouchdb/pouchdb.js"></script>
+    <script type="module" src="../../../arc-data-generator/arc-data-generator.js"></script>
+    <script type="module" src="../arc-data-export.js"></script> -->
   </head>
   <body>
 
@@ -18,8 +23,11 @@
       </template>
     </test-fixture>
 
-    <script>
-    /* global DataGenerator, chance */
+    <script type="module">
+    import {DataGenerator} from '../../arc-data-generator/arc-data-generator.js';
+    import '../arc-data-export.js';
+    import '../../../chance/dist/chance.min.js';
+    const chance = new Chance();
     suite('Basic', function() {
       function mockRev(data) {
         return data.map((item) => {

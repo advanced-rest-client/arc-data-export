@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-    <script src="../../webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
-    <script src="../../chance/dist/chance.min.js"></script>
-    <script src="data-helper.js"></script>
-    <link rel="import" href="../../app-pouchdb/pouchdb.html">
-    <link rel="import" href="../../arc-data-generator/arc-data-generator.html">
-    <link rel="import" href="../arc-data-export.html">
+
+    <script src="../node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../node_modules/@polymer/test-fixture/test-fixture.js"></script>
+    <script src="../node_modules/mocha/mocha.js"></script>
+    <script src="../node_modules/chai/chai.js"></script>
+    <script src="../node_modules/wct-mocha/wct-mocha.js"></script>
+    
   </head>
   <body>
 
@@ -19,8 +19,11 @@
       </template>
     </test-fixture>
 
-    <script>
-    /* global DataGenerator, DataHelper */
+    <script type="module">
+    import {DataGenerator} from '../../arc-data-generator/arc-data-generator.js';
+    import '../arc-data-export.js';
+    import {DataHelper} from './data-helper.js';
+    import {spy as sinonSpy} from '../../../sinon/pkg/sinon-esm.js';
     function waitUntilFileEvent(done) {
       window.addEventListener('file-data-save', function f(e) {
         window.removeEventListener('file-data-save', f);
@@ -140,7 +143,7 @@
         waitUntilFileEvent((e) => {
           e.preventDefault();
         });
-        const spy = sinon.spy(element, '_exportFile');
+        const spy = sinonSpy(element, '_exportFile');
         const result = element.dataExport({
           destination: 'file',
           data: {}
@@ -153,7 +156,7 @@
         waitUntilDriveEvent((e) => {
           e.preventDefault();
         });
-        const spy = sinon.spy(element, '_exportDrive');
+        const spy = sinonSpy(element, '_exportDrive');
         const result = element.dataExport({
           destination: 'drive',
           data: {}
@@ -178,7 +181,7 @@
         waitUntilFileEvent((e) => {
           e.preventDefault();
         });
-        const spy = sinon.spy(element, '_exportFile');
+        const spy = sinonSpy(element, '_exportFile');
         const data = {test: true};
         const result = element.dataExport({
           destination: 'file',
@@ -192,7 +195,7 @@
         waitUntilFileEvent((e) => {
           e.preventDefault();
         });
-        const spy = sinon.spy(element, '_exportFile');
+        const spy = sinonSpy(element, '_exportFile');
         const result = element.dataExport({
           destination: 'file',
           data: {}
@@ -205,7 +208,7 @@
         waitUntilFileEvent((e) => {
           e.preventDefault();
         });
-        const spy = sinon.spy(element, '_exportFile');
+        const spy = sinonSpy(element, '_exportFile');
         const result = element.dataExport({
           destination: 'file',
           file: 'test-file',
@@ -223,7 +226,7 @@
       });
 
       test('Disaptches session-cookie-list-all event', () => {
-        const spy = sinon.spy();
+        const spy = sinonSpy();
         element.addEventListener('session-cookie-list-all', spy);
         element._dispatchCookieList();
         assert.isTrue(spy.called);
@@ -274,7 +277,7 @@
 
       test('Calls _dispatchCookieList()', () => {
         element.addEventListener('session-cookie-list-all', cookieFactory);
-        const spy = sinon.spy(element, '_dispatchCookieList');
+        const spy = sinonSpy(element, '_dispatchCookieList');
         element._queryCookies();
         assert.isTrue(spy.called);
       });

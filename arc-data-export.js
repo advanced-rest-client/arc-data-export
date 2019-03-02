@@ -1,4 +1,4 @@
-<!--
+/**
 @license
 Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -10,10 +10,9 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
--->
-<link rel="import" href="../polymer/polymer-element.html">
-<dom-module id="arc-data-export">
-<script>
+*/
+import {PolymerElement} from '@polymer/polymer/polymer-element.js';
+
 /**
  * An element to handle data export for ARC.
  *
@@ -21,9 +20,9 @@ the License.
  * @polymer
  * @memberof LogicElements
  */
-class ArcDataExport extends Polymer.Element {
-  static get is() {
-    return 'arc-data-export';
+export class ArcDataExport extends PolymerElement {
+  static get importMeta() {
+    return import.meta;
   }
   static get properties() {
     return {
@@ -434,6 +433,4 @@ class ArcDataExport extends Polymer.Element {
    * @param {String} file Export file name.
    */
 }
-window.customElements.define(ArcDataExport.is, ArcDataExport);
-</script>
-</dom-module>
+window.customElements.define('arc-data-export', ArcDataExport);
