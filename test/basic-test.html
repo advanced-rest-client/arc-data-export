@@ -263,25 +263,19 @@
           });
 
           test('Sets createdAt property', function() {
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.typeOf(result.createdAt, 'string');
-            });
+            const result = element.createExportObject(opts)
+            assert.typeOf(result.createdAt, 'string');
           });
 
           test('Default version is set', function() {
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.equal(result.version, 'unknown');
-            });
+            const result = element.createExportObject(opts);
+            assert.equal(result.version, 'unknown');
           });
 
           test('Sets version from attribute', function() {
             element.appVersion = 'test-version';
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.equal(result.version, 'test-version');
-            });
+            const result = element.createExportObject(opts)
+            assert.equal(result.version, 'test-version');
           });
         });
 
@@ -305,38 +299,30 @@
             });
 
             test(`${property} is set`, function() {
-              return element.createExportObject(opts)
-              .then((result) => {
-                assert.typeOf(result[property], 'array');
-                assert.lengthOf(result[property], opts[property].length);
-                assert.isUndefined(result[property][0]._rew, 'Array was processed');
-              });
+              const result = element.createExportObject(opts);
+              assert.typeOf(result[property], 'array');
+              assert.lengthOf(result[property], opts[property].length);
+              assert.isUndefined(result[property][0]._rew, 'Array was processed');
             });
 
             test('Result is an array', function() {
-              return element.createExportObject(opts)
-              .then((result) => {
-                assert.typeOf(result[property], 'array');
-              });
+              const result = element.createExportObject(opts);
+              assert.typeOf(result[property], 'array');
             });
 
             test('_rev and _id is removed, key is added', function() {
-              return element.createExportObject(opts)
-              .then((result) => {
-                const data = result[property];
-                for (let i = 0, len = data.length; i < len; i++) {
-                  assert.isUndefined(data[i]._id);
-                  assert.isUndefined(data[i]._rev);
-                  assert.typeOf(data[i].key, 'string');
-                }
-              });
+              const result = element.createExportObject(opts);
+              const data = result[property];
+              for (let i = 0, len = data.length; i < len; i++) {
+                assert.isUndefined(data[i]._id);
+                assert.isUndefined(data[i]._rev);
+                assert.typeOf(data[i].key, 'string');
+              }
             });
 
             test('kind property is set', function() {
-              return element.createExportObject(opts)
-              .then((result) => {
-                assert.equal(result[property][0].kind, item[3]);
-              });
+              const result = element.createExportObject(opts);
+              assert.equal(result[property][0].kind, item[3]);
             });
           });
         });
@@ -350,41 +336,33 @@
 
           test('Uses "saved" as requests', () => {
             opts.saved = mockRev(DataGenerator.generateRequests());
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.lengthOf(result.requests, opts.saved.length);
-            });
+            const result = element.createExportObject(opts);
+            assert.lengthOf(result.requests, opts.saved.length);
           });
 
           test('Combines saved and requests', () => {
             opts.saved = mockRev(DataGenerator.generateRequests());
             opts.requests = mockRev(DataGenerator.generateRequests());
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.lengthOf(result.requests, (opts.saved.length + opts.requests.length));
-            });
+            const result = element.createExportObject(opts);
+            assert.lengthOf(result.requests, (opts.saved.length + opts.requests.length));
           });
 
           test('Creates "projects" from legacyProject', () => {
             opts.requests = mockRev(DataGenerator.generateRequests());
             opts.requests[0].legacyProject = 'test-project';
             opts.requests[0].projects = undefined;
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.lengthOf(result.requests[0].projects, 1);
-              assert.isUndefined(result.requests[0].legacyProject);
-            });
+            const result = element.createExportObject(opts);
+            assert.lengthOf(result.requests[0].projects, 1);
+            assert.isUndefined(result.requests[0].legacyProject);
           });
 
           test('Adds legacyProject to "projects"', () => {
             opts.requests = mockRev(DataGenerator.generateRequests());
             opts.requests[0].legacyProject = 'test-project';
             opts.requests[0].projects = ['test-other'];
-            return element.createExportObject(opts)
-            .then((result) => {
-              assert.deepEqual(result.requests[0].projects, ['test-other', 'test-project']);
-              assert.isUndefined(result.requests[0].legacyProject);
-            });
+            const result = element.createExportObject(opts);
+            assert.deepEqual(result.requests[0].projects, ['test-other', 'test-project']);
+            assert.isUndefined(result.requests[0].legacyProject);
           });
         });
       });
