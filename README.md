@@ -6,44 +6,76 @@
 
 ## &lt;arc-data-export&gt;
 
-An element to handle data export ARC.
-It's event based API allows to use the element anywhere in the DOM and
-other ARC components will communicate with `arc-data-export` to request data export.
+An element to handle data export in Advanced REST Client application. It creates an unified export object.
 
+It's event based API allows to use the element anywhere in the DOM and other ARC components will communicate with `arc-data-export` to request data export.
 
-```html
-<arc-data-export></arc-data-export>
-```
-
-### API components
-
-This components is a part of [API components ecosystem](https://elements.advancedrestclient.com/)
+After the export object is created it dispatches `file-data-save` or `google-drive-data-save` custom events depending on export configuration. The element does not handle export operation as this vary depending on the platform. The application should handle this events and perform file/drive data save.
 
 ## Usage
 
+### Installation
+```
+npm install --save @advanced-rest-client/arc-data-export
+```
+
+### arc-data-export event
+
 ```javascript
-const e = new CustomEvent('export-data', {
+const e = new CustomEvent('arc-data-export', {
   bubbles: true,
   cancelable: true,
   composed: true,
   detail: {
-    file: 'arc-data-export.json',
-    destination: 'file',
-    type: 'arc-export',
     data: {
       requests: true,
       projects: true,
       'history-url': [{...}]
+    },
+    options: {
+      provider: 'file or drive (at the moment)',
+      file: 'export-file-name.arc'
+    },
+    providerOptions: {
+      contentType: 'application/restclient+data'
     }
   }
 });
 this.dispatchEvent(e);
 ```
 
-### Installation
+#### data
+
+The data property of the detail object contains a map of export items to process. Possible keys are:
+
+-   `all` exports all data from all data stores `{all: true}`
+-   `history` - History requests
+-   `saved` - Saved requests, this includes projects.
+-   `websocket` - Websocket URL history
+-   `url-history` - URL history
+-   `variables` - Defined application variables
+-   `auth` - Stored authorization data
+-   `cookies` - Stored cookies data
+-   `host-rules` - Host rules data
+
+Each property (expect for `all`) accepts either `true` to export all data from the store or an array of items to export.
+
+```javascript
+const data = {
+  cookies: true,
+  auth: [{...}, {...}]
+};
 ```
-npm install --save @advanced-rest-client/arc-data-export
-```
+
+#### options
+
+Export options. `provider` tells which export provider should be used. Currently ARC support `file` and `drive`.
+`file` is export file name.
+
+#### providerOptions
+
+`providerOptions` object is passed to the corresponding event dispatched to export provider.
+Application can set `contentType` property. Only `application/json` and `application/restclient+data` is currently supported. Everything else is treated as text.
 
 ### In an html file
 
@@ -60,6 +92,31 @@ npm install --save @advanced-rest-client/arc-data-export
 </html>
 ```
 
+### In a LitElement template
+
+```javascript
+import { LitElement, html } from 'lit-element';
+import '@advanced-rest-client/arc-data-export/arc-data-export.js';
+
+class SampleElement extends LitElement {
+  render() { `<arc-data-export></arc-data-export>`; }
+
+  _doExport() {
+    const node = this.shadowRoot.querySelector('arc-data-export');
+    node.arcExport({
+      data: {
+        all: true
+      },
+      options: {
+        provider: 'file',
+        file: 'all-export.arc'
+      }
+    });
+  }
+}
+customElements.define('sample-element', SampleElement);
+```
+
 ### In a Polymer 3 element
 
 ```js
@@ -72,31 +129,25 @@ class SampleElement extends PolymerElement {
     <arc-data-export></arc-data-export>
     `;
   }
-
-  _authChanged(e) {
-    console.log(e.detail);
-  }
 }
 customElements.define('sample-element', SampleElement);
 ```
 
-### Installation
+### Development
 
 ```sh
-git clone https://github.com/advanced-rest-client/arc-data-export
-cd api-url-editor
+git clone https://github.com/@advanced-rest-client/arc-data-export
+cd arc-scroll-threshold
 npm install
-npm install -g polymer-cli
 ```
 
 ### Running the demo locally
 
 ```sh
-polymer serve --npm
-open http://127.0.0.1:<port>/demo/
+npm start
 ```
 
 ### Running the tests
 ```sh
-polymer test --npm
+npm test
 ```

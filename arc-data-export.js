@@ -11,7 +11,7 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
 */
-import { PolymerElement } from '../../@polymer/polymer/polymer-element.js';
+import 'pouchdb/dist/pouchdb.js';
 /**
  * A class that processes ARC data to create a standard export object.
  */
@@ -188,32 +188,75 @@ class ExportProcessor {
   }
 }
 /**
+ * A size of datastore read operation in one call.
+ */
+const dbChunk = 1000;
+/**
  * An element to handle data export for ARC.
  *
  * @customElement
  * @polymer
  * @memberof LogicElements
  */
-export class ArcDataExport extends PolymerElement {
-  static get properties() {
-    return {
-      /**
-       * Hosting application version number. If not set it sends `app-version`
-       * custom event to query for the application version number.
-       */
-      appVersion: { type: String, value: 'unknown' },
-      /**
-       * A size of datastore read operation in one call.
-       */
-      dbChunk: {
-        type: Number,
-        value: 1000
-      },
-      /**
-       * If set it uses arc electron session state module to read cookie data
-       */
-      electronCookies: Boolean
-    };
+export class ArcDataExport extends HTMLElement {
+  static get observedAttributes() {
+    return [
+      'appversion', 'electroncookies'
+    ];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    switch (name) {
+      case 'appversion': this.appVersion = newValue; break;
+      case 'electroncookies': this.electronCookies = newValue; break;
+    }
+  }
+  /**
+   * @return {String} Hosting application version number. If not set it sends `app-version`
+   * custom event to query for the application version number.
+   */
+  get appVersion() {
+    return this._appVersion;
+  }
+
+  set appVersion(value) {
+    const old = this._appVersion;
+    if (old === value) {
+      return;
+    }
+    value = String(value);
+    this._appVersion = value;
+    if (this.getAttribute('appversion') !== value) {
+      this.setAttribute('appversion', value);
+    }
+  }
+  /**
+   * @return {Boolean} If set it uses arc electron session state module to read cookie data
+   */
+  get electronCookies() {
+    return this._electronCookies;
+  }
+
+  set electronCookies(value) {
+    if (value === null || value === false || value === undefined) {
+      value = false;
+    } else {
+      value = true;
+    }
+    const old = this._electronCookies;
+    if (old === value) {
+      return;
+    }
+    this._electronCookies = value;
+    if (value) {
+      if (!this.hasAttribute('electroncookies')) {
+        this.setAttribute('electroncookies', '');
+      }
+    } else {
+      if (this.hasAttribute('electroncookies')) {
+        this.removeAttribute('electroncookies');
+      }
+    }
   }
 
   constructor() {
@@ -223,13 +266,11 @@ export class ArcDataExport extends PolymerElement {
   }
 
   connectedCallback() {
-    super.connectedCallback();
     window.addEventListener('export-data', this._exportHandler);
     window.addEventListener('arc-data-export', this._arcExportHandler);
   }
 
   disconnectedCallback() {
-    super.disconnectedCallback();
     window.removeEventListener('export-data', this._exportHandler);
     window.removeEventListener('arc-data-export', this._arcExportHandler);
   }
@@ -261,11 +302,11 @@ export class ArcDataExport extends PolymerElement {
   dataExport(opts) {
     const file = opts.file || 'arc-data-export.json';
     const destination = opts.destination;
-    let data = opts.data;
+    const data = opts.data;
     switch (destination) {
       case 'file': return this._exportFile(data, file, opts.providerOptions);
       case 'drive': return this._exportDrive(data, file, opts.providerOptions);
-      default: return Promise.reject(`Unknown destination ${destination}`);
+      default: return Promise.reject(new Error(`Unknown destination ${destination}`));
     }
   }
   /**
@@ -367,7 +408,7 @@ export class ArcDataExport extends PolymerElement {
    * the database.
    * @return {Promise}
    */
-  _queryCookies() {
+  async _queryCookies() {
     const e = this._dispatchCookieList();
     if (!e.defaultPrevented) {
       console.warn('session-cookie-list-all not handled');
@@ -376,13 +417,11 @@ export class ArcDataExport extends PolymerElement {
         data: []
       });
     }
-    return e.detail.result
-    .then((data) => {
-      return {
-        name: 'cookies',
-        data
-      };
-    });
+    const data = await e.detail.result;
+    return {
+      name: 'cookies',
+      data
+    };
   }
   /**
    * Disaptches `session-cookie-list-all` event and returns it.
@@ -459,7 +498,7 @@ export class ArcDataExport extends PolymerElement {
    */
   _getDatabaseEntries(dbName) {
     const options = {
-      limit: this.dbChunk,
+      limit: dbChunk,
       // jscs:disable
       include_docs: true
       // jscs:enable
