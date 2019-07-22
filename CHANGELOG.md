@@ -199,3 +199,57 @@
 
 
 
+# [3.0.0](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.3...3.0.0) (2019-07-22)
+
+
+### Breaking
+
+* Changind the API, adding web worker ([e8518fff918232932e436f6a8e7b4c0b0aeb0b4d](https://github.com/advanced-rest-client/arc-data-export/commit/e8518fff918232932e436f6a8e7b4c0b0aeb0b4d))
+* Redesigning exportf flow ([74a53ee323a5c7fbf913a3c1d2620097f19e3570](https://github.com/advanced-rest-client/arc-data-export/commit/74a53ee323a5c7fbf913a3c1d2620097f19e3570))
+* Upgrading to Polymer 3 ([444307fa793af0c4ebf1a197a78695a4a72b2329](https://github.com/advanced-rest-client/arc-data-export/commit/444307fa793af0c4ebf1a197a78695a4a72b2329))
+
+### build
+
+* bumping version ([b26685c85a3ada8f44cded5e6b4a542d9189ea1c](https://github.com/advanced-rest-client/arc-data-export/commit/b26685c85a3ada8f44cded5e6b4a542d9189ea1c))
+
+### chore
+
+* adding export declaration to ExportProcessor class ([23e8ae040aeeb253943868127f06388c6ac12715](https://github.com/advanced-rest-client/arc-data-export/commit/23e8ae040aeeb253943868127f06388c6ac12715))
+
+### docs
+
+* updating typpings ([ab596a1c1a2560767c09abf284f722da7a2cfc3e](https://github.com/advanced-rest-client/arc-data-export/commit/ab596a1c1a2560767c09abf284f722da7a2cfc3e))
+
+### Docs
+
+* Updating docs ([10fda33f815935238fc51f9e6a48fe5ee5d6f534](https://github.com/advanced-rest-client/arc-data-export/commit/10fda33f815935238fc51f9e6a48fe5ee5d6f534))
+* Updating docs ([5a1cd9c0fc2088e86f66a34741a4d8cdcbb02f05](https://github.com/advanced-rest-client/arc-data-export/commit/5a1cd9c0fc2088e86f66a34741a4d8cdcbb02f05))
+* Updating documentation. ([d7c2ed6b8e2db7a6c6f405ee2955a6406c977ab6](https://github.com/advanced-rest-client/arc-data-export/commit/d7c2ed6b8e2db7a6c6f405ee2955a6406c977ab6))
+* Updating polymer docs ([38180202ab6714fb95bd5f36014c271adb80f7ce](https://github.com/advanced-rest-client/arc-data-export/commit/38180202ab6714fb95bd5f36014c271adb80f7ce))
+* Updating Polymer docs ([61956425b5644b41f309388becb17409d7ff6f84](https://github.com/advanced-rest-client/arc-data-export/commit/61956425b5644b41f309388becb17409d7ff6f84))
+
+### Fix
+
+* Fixing event prevented recognition ([9eaa7cdc926a3cef25ed3936ae537028a47384b6](https://github.com/advanced-rest-client/arc-data-export/commit/9eaa7cdc926a3cef25ed3936ae537028a47384b6))
+* Fixing tests ([2588e94123f03e24c0623234667682f69d6b6bc8](https://github.com/advanced-rest-client/arc-data-export/commit/2588e94123f03e24c0623234667682f69d6b6bc8))
+
+### New
+
+* Adding test coverage ([ef1d25b0ce8686cd4cc30526ef2e41a91c39274e](https://github.com/advanced-rest-client/arc-data-export/commit/ef1d25b0ce8686cd4cc30526ef2e41a91c39274e))
+
+### refactor
+
+* moving worker logic to the main element ([f96b3f463d6c6b1acecb1132fe63cf4cf674180d](https://github.com/advanced-rest-client/arc-data-export/commit/f96b3f463d6c6b1acecb1132fe63cf4cf674180d))
+* removing Polymer library and making the element native WC ([3a9bd9f8328bb3c44cdbd5dfbdb99278855ef7e2](https://github.com/advanced-rest-client/arc-data-export/commit/3a9bd9f8328bb3c44cdbd5dfbdb99278855ef7e2))
+
+### test
+
+* adding pouchdb file to tests configuration ([22e53d9ebc254a1483c0faa23eb31bd55bee358d](https://github.com/advanced-rest-client/arc-data-export/commit/22e53d9ebc254a1483c0faa23eb31bd55bee358d))
+
+### Update
+
+* Fixing mime type setting ([085d7ab75fa156ebdf38aac2c67f906bc8660ed7](https://github.com/advanced-rest-client/arc-data-export/commit/085d7ab75fa156ebdf38aac2c67f906bc8660ed7))
+* Updating import paths to match web spec ([47ca1f629407233a4c391642f04fb3cb47880434](https://github.com/advanced-rest-client/arc-data-export/commit/47ca1f629407233a4c391642f04fb3cb47880434))
+
+
+
