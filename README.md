@@ -137,7 +137,7 @@ customElements.define('sample-element', SampleElement);
 
 ```sh
 git clone https://github.com/@advanced-rest-client/arc-data-export
-cd arc-scroll-threshold
+cd arc-models
 npm install
 ```
 
