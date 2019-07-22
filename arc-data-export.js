@@ -15,7 +15,7 @@ import 'pouchdb/dist/pouchdb.js';
 /**
  * A class that processes ARC data to create a standard export object.
  */
-class ExportProcessor {
+export class ExportProcessor {
   /**
    * Creates an export object for the data.
    *
