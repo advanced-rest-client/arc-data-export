@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/arc-data-export",
   "description": "An element to handle data export preparation for ARC",
-  "version": "3.0.0-preview.2",
+  "version": "3.0.0",
   "license": "Apache-2.0",
   "main": "arc-data-export.js",
   "keywords": [
