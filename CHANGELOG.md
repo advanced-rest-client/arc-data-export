@@ -316,3 +316,12 @@
 
 
 
+## [3.1.1](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.3...3.1.1) (2019-10-06)
+
+
+### Bug Fixes
+
+* fixes [#3](https://github.com/advanced-rest-client/arc-data-export/issues/3) - add encryption to file export ([a7f8d4f](https://github.com/advanced-rest-client/arc-data-export/commit/a7f8d4f))
+
+
+
