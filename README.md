@@ -34,7 +34,9 @@ const e = new CustomEvent('arc-data-export', {
     },
     options: {
       provider: 'file or drive (at the moment)',
-      file: 'export-file-name.arc'
+      file: 'export-file-name.arc',
+      encrypt: true,
+      passphrase: 'some pass phrase'
     },
     providerOptions: {
       contentType: 'application/restclient+data'
@@ -69,8 +71,25 @@ const data = {
 
 #### options
 
-Export options. `provider` tells which export provider should be used. Currently ARC support `file` and `drive`.
-`file` is export file name.
+Export options.
+
+##### provider
+The `provider` tells which export provider should be used.
+Currently ARC supports `file` and `drive`.
+
+##### file
+Export file name.
+
+##### encrypt
+
+`Boolean`. When set it sends the content for encryption before exporting data to file/drive.
+When set `passphrase` must be also set, even when empty string.
+The component does not support data encoding. It dispatches `encryption-encode` custom event
+for the application to encode the data.
+
+##### passphrase
+
+A pass phrase to use to encrypt the content. It must be set to a string, however it can be empty.
 
 #### providerOptions
 
