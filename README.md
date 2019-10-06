@@ -87,6 +87,9 @@ When set `passphrase` must be also set, even when empty string.
 The component does not support data encoding. It dispatches `encryption-encode` custom event
 for the application to encode the data.
 
+The component requests for AES encryption. The generated file contains `aes` word in the first line
+and encoded value in second line.
+
 ##### passphrase
 
 A pass phrase to use to encrypt the content. It must be set to a string, however it can be empty.

@@ -421,8 +421,12 @@ export class ArcDataExport extends HTMLElement {
       }
     });
     this.dispatchEvent(e);
-    const encoded = await e.detail.result;
-    return encoded || data;
+    let encoded = await e.detail.result;
+    if (encoded) {
+      encoded = `aes\n${encoded}`;
+      return encoded;
+    }
+    return data;
   }
   /**
    * Fired when any element request to export data outside the application

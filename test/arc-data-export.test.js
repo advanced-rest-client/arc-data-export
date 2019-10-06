@@ -897,12 +897,23 @@ describe('<arc-data-export>', function() {
       assert.isTrue(spy.called);
     });
 
+    it('adds encryption header to the file', async () => {
+      window.addEventListener('encryption-encode', encFactory);
+      element.arcExport(opts);
+      const e = await untilFileEvent();
+      const encoded = e.detail.content;
+      const lines = encoded.split('\n');
+      assert.equal(lines[0], 'aes', 'header is set');
+      assert.typeOf(lines[1], 'string', 'content is set')
+    });
+
     it('sets encrypted payload', async () => {
       window.addEventListener('encryption-encode', encFactory);
       element.arcExport(opts);
       const e = await untilFileEvent();
       const encoded = e.detail.content;
-      const bytes = CryptoJS.AES.decrypt(e.detail.content, opts.options.passphrase);
+      const lines = encoded.split('\n');
+      const bytes = CryptoJS.AES.decrypt(lines[1], opts.options.passphrase);
       const txt = bytes.toString(CryptoJS.enc.Utf8);
       assert.notEqual(encoded, txt, 'Contains encoded content');
       const parsed = JSON.parse(txt);
@@ -922,7 +933,8 @@ describe('<arc-data-export>', function() {
       element.arcExport(opts);
       const e = await untilFileEvent();
       const encoded = e.detail.content;
-      const bytes = CryptoJS.AES.decrypt(e.detail.content, opts.options.passphrase);
+      const lines = encoded.split('\n');
+      const bytes = CryptoJS.AES.decrypt(lines[1], opts.options.passphrase);
       const txt = bytes.toString(CryptoJS.enc.Utf8);
       assert.notEqual(encoded, txt, 'Contains encoded content');
       const parsed = JSON.parse(txt);
