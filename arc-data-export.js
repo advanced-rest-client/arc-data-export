@@ -188,10 +188,6 @@ export class ExportProcessor {
   }
 }
 /**
- * A size of datastore read operation in one call.
- */
-const dbChunk = 1000;
-/**
  * An element to handle data export for ARC.
  *
  * @customElement
@@ -263,6 +259,10 @@ export class ArcDataExport extends HTMLElement {
     super();
     this._exportHandler = this._exportHandler.bind(this);
     this._arcExportHandler = this._arcExportHandler.bind(this);
+    /**
+     * A size of datastore read operation in one call.
+     */
+    this.dbChunk = 1000;
   }
 
   connectedCallback() {
@@ -320,54 +320,82 @@ export class ArcDataExport extends HTMLElement {
   async arcExport(detail) {
     let { data, options, providerOptions } = detail;
     if (!options) {
-      return Promise.reject(new Error('The "options" property is not set.'));
+      throw new Error('The "options" property is not set.');
     }
     if (!options.provider) {
-      return Promise.reject(new Error('The "options.provider" property is not set.'));
+      throw new Error('The "options.provider" property is not set.');
     }
     if (!options.file) {
-      return Promise.reject(new Error('The "options.file" property is not set.'));
+      throw new Error('The "options.file" property is not set.');
     }
+    const exportData = await this._getExportData(data);
+    const payload = JSON.stringify(this.createExportObject(exportData, options));
     if (!providerOptions) {
       providerOptions = {};
     }
     providerOptions.contentType = 'application/restclient+data';
-
+    switch (options.provider) {
+      case 'file': return this._exportFile(payload, options.file, providerOptions);
+      case 'drive': return this._exportDrive(payload, options.file, providerOptions);
+      default: throw new Error(`Unknown destination ${options.provider}`);
+    }
+  }
+  /**
+   * Creates an input data structure from datastore for further processing.
+   * @param {Object} data A map of datastores to export.
+   * The key is the export name (defined in `export-panel`). The value is either
+   * a boolean value which fetches all entries from the data store, or a list of
+   * objects to export (no datastore query is made).
+   * @return {Promise}
+   */
+  async _getExportData(data) {
     const dataKeys = Object.keys(data);
     const exportData = {};
-    let databases = [];
     for (let i = 0, len = dataKeys.length; i < len; i++) {
       const key = dataKeys[i];
       const value = data[key];
       if (typeof value === 'boolean' && value) {
-        databases[databases.length] = key;
+        if (key === 'cookies' && this.electronCookies) {
+          exportData[key] = await this._queryCookies();
+        } else {
+          const dbName = this._getDatabaseName(key);
+          const exportKey = this._getExportKeyName(key);
+          exportData[exportKey] = await this._getDatabaseEntries(dbName);
+          if (key === 'saved') {
+            exportData.projects = await this._getDatabaseEntries('legacy-projects');
+          }
+        }
       } else if (value instanceof Array) {
         exportData[key] = value;
-      } else {
-        // .
       }
     }
-    databases = this._getDatabasesInfo(databases);
-    const promises = [];
-    if (this.electronCookies && 'cookies' in databases) {
-      promises.push(this._queryCookies());
-      delete databases.cookies;
+    return exportData;
+  }
+  /**
+   * Maps export key from the event to database name.
+   * @param {String} key Export data type name from the event.
+   * @return {String} Database name
+   */
+  _getDatabaseName(key) {
+    switch (key) {
+      case 'history': return 'history-requests';
+      case 'saved': return 'saved-requests';
+      case 'websocket': return 'websocket-url-history';
+      case 'auth': return 'auth-data';
+      default: return key;
     }
-    Object.keys(databases).forEach((name) => {
-      promises.push(this._getDatabaseEntries(name));
-    });
-    const result = await Promise.all(promises);
-    result.forEach((data) => {
-      if (data.name === 'cookies' && this.electronCookies) {
-        databases.cookies = 'cookies';
-      }
-      exportData[databases[data.name]] = data.data;
-    });
-    const payload = JSON.stringify(this.createExportObject(exportData, options));
-    switch (options.provider) {
-      case 'file': return this._exportFile(payload, options.file, providerOptions);
-      case 'drive': return this._exportDrive(payload, options.file, providerOptions);
-      default: return Promise.reject(new Error(`Unknown destination ${options.provider}`));
+  }
+  /**
+   * Maps export key from the event to export object proeprty name.
+   * @param {String} key Export data type name from the event.
+   * @return {String} Export property name.
+   */
+  _getExportKeyName(key) {
+    switch (key) {
+      case 'saved': return 'requests';
+      case 'websocket': return 'websocket-url-history';
+      case 'auth': return 'auth-data';
+      default: return key;
     }
   }
   /**
@@ -411,16 +439,9 @@ export class ArcDataExport extends HTMLElement {
   async _queryCookies() {
     const e = this._dispatchCookieList();
     if (!e.defaultPrevented) {
-      return {
-        name: 'cookies',
-        data: []
-      };
+      return [];
     }
-    const data = await e.detail.result;
-    return {
-      name: 'cookies',
-      data
-    };
+    return await e.detail.result;
   }
   /**
    * Disaptches `session-cookie-list-all` event and returns it.
@@ -437,91 +458,54 @@ export class ArcDataExport extends HTMLElement {
     return e;
   }
   /**
-   * Checks if `type` is one of the allowed export types defined in
-   * `exportType`.
-   *
-   * @param {String|Array} exportType Export type name or list of export types
-   * names allowed to be exported.
-   * @param {String} type An export type to test
-   * @return {Boolean} True if the `type` is allowed
-   */
-  _isAllowedExport(exportType, type) {
-    if (exportType instanceof Array) {
-      return exportType.indexOf(type) !== -1;
-    }
-    return exportType === type || exportType === 'all' || exportType === true;
-  }
-  /**
-   * Creats a map of database name <--> export object key name mapping.
-   *
-   * @param {String|Array} type Name of the database or list of databases names
-   * to export
-   * @return {Object} A map where keys are database name and values are
-   * export object properties where the data will be put.
-   */
-  _getDatabasesInfo(type) {
-    const databases = {};
-    if (this._isAllowedExport(type, 'history')) {
-      databases['history-requests'] = 'history';
-    }
-    if (this._isAllowedExport(type, 'saved')) {
-      databases['saved-requests'] = 'requests';
-      databases['legacy-projects'] = 'projects';
-    }
-    if (this._isAllowedExport(type, 'websocket')) {
-      databases['websocket-url-history'] = 'websocket-url-history';
-    }
-    if (this._isAllowedExport(type, 'url-history')) {
-      databases['url-history'] = 'url-history';
-    }
-    if (this._isAllowedExport(type, 'variables')) {
-      databases.variables = 'variables';
-    }
-    if (this._isAllowedExport(type, 'auth')) {
-      databases['auth-data'] = 'auth-data';
-    }
-    if (this._isAllowedExport(type, 'cookies')) {
-      databases.cookies = 'cookies';
-    }
-    if (this._isAllowedExport(type, 'host-rules')) {
-      databases['host-rules'] = 'host-rules';
-    }
-    return databases;
-  }
-  /**
    * Returns all data from a database.
    *
    * @param {String} dbName Name of the datastore t get the data from.
    * @return {Promise} Resolved promise to array of objects. It always
    * resolves.
    */
-  _getDatabaseEntries(dbName) {
+  async _getDatabaseEntries(dbName) {
     const options = {
-      limit: dbChunk,
+      limit: this.dbChunk,
       include_docs: true
     };
     /* global PouchDB */
     const db = new PouchDB(dbName);
     let result = [];
-    return new Promise((resolve) => {
-      function fetchNextPage() {
-        db.allDocs(options, function(err, response) {
-          if (response && response.rows && response.rows.length > 0) {
-            options.startkey = response.rows[response.rows.length - 1].id;
-            options.skip = 1;
-            const docs = response.rows.map((item) => item.doc);
-            result = result.concat(docs);
-            return fetchNextPage();
-          } else {
-            resolve({
-              name: dbName,
-              data: result
-            });
-          }
-        });
+    let hasMore = true;
+    do {
+      const data = await this._fetchEntriesPage(db, options);
+      if (data) {
+        result = result.concat(data);
+        if (data.length < this.dbChunk) {
+          // prohibits additional DB fetch when it's clear that there's no
+          // more results.
+          hasMore = false;
+        }
+      } else {
+        hasMore = false;
       }
-      fetchNextPage();
-    });
+    } while(hasMore);
+    return result;
+  }
+  /**
+   * Fetches a single page of results from the database.
+   * @param {Object} db PouchDB instance
+   * @param {Object} options Fetch options. This object is altered during fetch.
+   * @return {Promise} Promise resolved to the list of documents.
+   */
+  async _fetchEntriesPage(db, options) {
+    try {
+      const response = await db.allDocs(options);
+      if (response.rows && response.rows.length > 0) {
+        /* eslint-disable require-atomic-updates */
+        options.startkey = response.rows[response.rows.length - 1].id;
+        options.skip = 1;
+        return response.rows.map((item) => item.doc);
+      }
+    } catch (e) {
+      // ..
+    }
   }
   /**
    * Requests application to export data to file.

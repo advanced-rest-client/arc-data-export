@@ -1,5 +1,5 @@
 import { fixture, assert } from '@open-wc/testing';
-import sinon from 'sinon/pkg/sinon-esm.js';
+import * as sinon from 'sinon/pkg/sinon-esm.js';
 import 'chance/dist/chance.min.js';
 import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data-generator.js';
 import { DataHelper } from './data-helper.js';
@@ -42,82 +42,6 @@ describe('<arc-data-export>', function() {
     }
 
     let element;
-    describe('_isAllowedExport()', function() {
-      beforeEach(async () => {
-        element = await basicFixture();
-      });
-
-      it('Passes test for equal string attributes', function() {
-        const result = element._isAllowedExport('a', 'a');
-        assert.isTrue(result);
-      });
-
-      it('Do not passes test for not equal string attributes', function() {
-        const result = element._isAllowedExport('a', 'b');
-        assert.isFalse(result);
-      });
-
-      it('Passes test if type is in array', function() {
-        const result = element._isAllowedExport(['a', 'b', 'c'], 'a');
-        assert.isTrue(result);
-      });
-
-      it('Do not passes test if type is not in array', function() {
-        const result = element._isAllowedExport(['a', 'b', 'c'], 'd');
-        assert.isFalse(result);
-      });
-
-      it('Passes test if exportType equals "all"', function() {
-        const result = element._isAllowedExport('all');
-        assert.isTrue(result);
-      });
-    });
-
-    describe('_getDatabasesInfo()', function() {
-      beforeEach(async () => {
-        element = await basicFixture();
-      });
-
-      it('Returns empty object for not defined type', function() {
-        const result = element._getDatabasesInfo();
-        assert.lengthOf(Object.keys(result), 0);
-      });
-
-      it('Returns mapping for a single database', function() {
-        const result = element._getDatabasesInfo('history');
-        assert.typeOf(result['history-requests'], 'string');
-        assert.lengthOf(Object.keys(result), 1);
-      });
-
-      it('Returns mapping for projects and saved requests', function() {
-        const result = element._getDatabasesInfo('saved');
-        assert.equal(result['saved-requests'], 'requests');
-        assert.equal(result['legacy-projects'], 'projects');
-        assert.lengthOf(Object.keys(result), 2);
-      });
-
-      it('Returns mapping for defined data types', function() {
-        const types = [
-          'history',
-          'url-history',
-          'websocket',
-          'variables',
-          'auth',
-          'cookies',
-          'host-rules'
-        ];
-        const result = element._getDatabasesInfo(types);
-        assert.equal(result['history-requests'], 'history');
-        assert.equal(result['websocket-url-history'], 'websocket-url-history');
-        assert.equal(result['url-history'], 'url-history');
-        assert.equal(result['auth-data'], 'auth-data');
-        assert.equal(result['host-rules'], 'host-rules');
-        assert.equal(result.variables, 'variables');
-        assert.equal(result.cookies, 'cookies');
-        assert.lengthOf(Object.keys(result), types.length);
-      });
-    });
-
     // describe('_prepareRequestsList()', function() {
     //   let data;
     //
@@ -422,6 +346,30 @@ describe('<arc-data-export>', function() {
               assert.equal(cause.message, 'The "options.file" property is not set.');
             });
       });
+
+      it('Rejects when destination is unknown', async () => {
+        const cnf = {
+          options: {
+            provider: 'x',
+            file: 'test'
+          },
+          data: {
+            requests: [{
+              _id: 'a',
+              _rev: 'b'
+            }]
+          },
+          providerOptions: {}
+        };
+        let err;
+        try {
+          await element.arcExport(cnf);
+        } catch (e) {
+          err = e;
+        }
+        assert.ok(err, 'Throws an error');
+        assert.equal(err.message, 'Unknown destination x');
+      });
     });
   });
 
@@ -454,27 +402,24 @@ describe('<arc-data-export>', function() {
         ['authorization', 'auth', 'auth-data'],
         ['cookies', 'cookies', 'cookies'],
         ['host rules', 'host-rules', 'host-rules']
-      ].forEach((item) => {
-        it(`Generates ${item[0]} data export`, function(done) {
+      ].forEach(([label, exportName, key]) => {
+        it(`Generates ${label} data export`, function(done) {
           waitUntilFileEvent((e) => {
             e.preventDefault();
             const data = JSON.parse(e.detail.content);
-            assert.typeOf(data[item[2]], 'array');
-            assert.lengthOf(data[item[2]], 15);
+            assert.typeOf(data[key], 'array');
+            assert.lengthOf(data[key], 15);
             done();
           });
           const data = {};
-          data[item[1]] = true;
+          data[exportName] = true;
           element.arcExport({
             options: {
               provider: destination,
               file: 'test-123',
             },
             data
-          })
-              .catch((cause) => {
-                done(cause);
-              });
+          }).catch((cause) => done(cause));
         });
       });
 
@@ -518,6 +463,54 @@ describe('<arc-data-export>', function() {
             history: DataGenerator.generateHistoryRequestsData({
               requestsSize: 5
             })
+          }
+        });
+      });
+
+      it('queries for electron cookies', (done) => {
+        element.addEventListener('session-cookie-list-all', (e) => {
+          e.preventDefault();
+          e.detail.result = Promise.resolve([{
+            _id: 'a',
+            _rev: 'b'
+          }]);
+        });
+        waitUntilFileEvent((e) => {
+          e.preventDefault();
+          const data = JSON.parse(e.detail.content);
+          assert.typeOf(data.cookies, 'array');
+          assert.lengthOf(data.cookies, 1);
+          const cookie = data.cookies[0];
+          assert.equal(cookie.key, 'a');
+          assert.equal(cookie.kind, 'ARC#Cookie');
+          done();
+        });
+        element.electronCookies = true;
+        element.arcExport({
+          options: {
+            provider: destination,
+            file: 'test-123',
+          },
+          data: {
+            cookies: true
+          }
+        });
+      });
+
+      it('ignores unknown key values', (done) => {
+        waitUntilFileEvent((e) => {
+          e.preventDefault();
+          const data = JSON.parse(e.detail.content);
+          assert.isUndefined(data.cookies);
+          done();
+        });
+        element.arcExport({
+          options: {
+            provider: destination,
+            file: 'test-123',
+          },
+          data: {
+            cookies: 'test'
           }
         });
       });
@@ -673,23 +666,17 @@ describe('<arc-data-export>', function() {
       assert.isTrue(spy.called);
     });
 
-    it('Resolves to empty array when event not handled', () => {
-      return element._queryCookies()
-          .then((data) => {
-            assert.equal(data.name, 'cookies');
-            assert.typeOf(data.data, 'array');
-            assert.lengthOf(data.data, 0);
-          });
+    it('Resolves to empty array when event not handled', async () => {
+      const data = await element._queryCookies();
+      assert.typeOf(data, 'array');
+      assert.lengthOf(data, 0);
     });
 
-    it('Resolves to cookie list in export data format', () => {
+    it('Resolves to cookie list in export data format', async () => {
       element.addEventListener('session-cookie-list-all', cookieFactory);
-      return element._queryCookies()
-          .then((data) => {
-            assert.equal(data.name, 'cookies');
-            assert.typeOf(data.data, 'array');
-            assert.lengthOf(data.data, 1);
-          });
+      const data = await element._queryCookies();
+      assert.typeOf(data, 'array');
+      assert.lengthOf(data, 1);
     });
   });
 
@@ -711,71 +698,81 @@ describe('<arc-data-export>', function() {
 
     it('Gets all requests data', async function() {
       const result = await element._getDatabaseEntries('saved-requests');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'saved-requests', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-      assert.equal(result.data[0].type, 'saved', 'Is a saved request');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.equal(result[0].type, 'saved', 'Is a saved request');
     });
 
     it('Gets all history data', async function() {
       const result = await element._getDatabaseEntries('history-requests');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'history-requests', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-      assert.equal(result.data[0].type, 'history', 'Is a history request');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.equal(result[0].type, 'history', 'Is a history request');
     });
 
     it('Gets all projects data', async function() {
       const result = await element._getDatabaseEntries('legacy-projects');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'legacy-projects', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-      assert.typeOf(result.data[0].description, 'string', 'Is a project item');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.typeOf(result[0].description, 'string', 'Is a project item');
     });
 
     it('Gets all websocket URL history data', async function() {
       const result = await element._getDatabaseEntries('websocket-url-history');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'websocket-url-history', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
     });
 
     it('Gets all URL data', async function() {
       const result = await element._getDatabaseEntries('url-history');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'url-history', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
     });
 
     it('Gets all variables data', async function() {
       const result = await element._getDatabaseEntries('variables');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'variables', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
     });
 
     it('Gets all cookies data', async function() {
       const result = await element._getDatabaseEntries('cookies');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'cookies', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-      assert.typeOf(result.data[0].domain, 'string', 'Is a cookie item');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.typeOf(result[0].domain, 'string', 'Is a cookie item');
     });
 
     it('Gets all auth-data data', async function() {
       const result = await element._getDatabaseEntries('auth-data');
-      assert.typeOf(result, 'object', 'result is an object');
-      assert.equal(result.name, 'auth-data', 'Name is set');
-      assert.typeOf(result.data, 'array', 'Data is an array');
-      assert.lengthOf(result.data, sampleSzie, 'Size is ok');
-      assert.equal(result.data[0].type, 'basic', 'Is an auth data item');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.equal(result[0].type, 'basic', 'Is an auth data item');
+    });
+  });
+
+  describe('Querying with pagination', function() {
+    const sampleSzie = 50;
+
+    before(async function() {
+      await DataHelper.generateData(sampleSzie);
+    });
+
+    after(async function() {
+      await DataGenerator.destroyAll();
+    });
+
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+      element.dbChunk = 20;
+    });
+
+    it('Gets all requests data', async function() {
+      const spy = sinon.spy(element, '_fetchEntriesPage');
+      const result = await element._getDatabaseEntries('saved-requests');
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, sampleSzie, 'Size is ok');
+      assert.equal(spy.callCount, 3, 'Fetch function called 3 times');
     });
   });
 
