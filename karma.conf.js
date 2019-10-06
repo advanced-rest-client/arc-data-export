@@ -19,6 +19,10 @@ module.exports = (config) => {
           pattern: 'node_modules/pouchdb/dist/pouchdb.min.js',
           type: 'js'
         },
+        {
+          pattern: 'node_modules/crypto-js/crypto-js.js',
+          type: 'js'
+        },
       ],
 
       // see the karma-esm docs for all options

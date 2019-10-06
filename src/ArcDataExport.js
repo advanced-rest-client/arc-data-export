@@ -124,10 +124,13 @@ export class ArcDataExport extends HTMLElement {
     e.detail.result = this.arcExport(e.detail);
   }
 
-  dataExport(opts) {
+  async dataExport(opts) {
     const file = opts.file || 'arc-data-export.json';
     const destination = opts.destination;
-    const data = opts.data;
+    let data = opts.data;
+    if (opts.encrypt) {
+      data = await this._encryptFile(data, opts.passphrase);
+    }
     switch (destination) {
       case 'file': return this._exportFile(data, file, opts.providerOptions);
       case 'drive': return this._exportDrive(data, file, opts.providerOptions);
@@ -154,14 +157,17 @@ export class ArcDataExport extends HTMLElement {
       throw new Error('The "options.file" property is not set.');
     }
     const exportData = await this._getExportData(data);
-    const payload = JSON.stringify(this.createExportObject(exportData, options));
+    let payload = JSON.stringify(this.createExportObject(exportData, options));
     if (!providerOptions) {
       providerOptions = {};
     }
     providerOptions.contentType = 'application/restclient+data';
+    if (options.encrypt) {
+      payload = await this._encryptFile(payload, options.passphrase);
+    }
     switch (options.provider) {
-      case 'file': return this._exportFile(payload, options.file, providerOptions);
-      case 'drive': return this._exportDrive(payload, options.file, providerOptions);
+      case 'file': return await this._exportFile(payload, options.file, providerOptions);
+      case 'drive': return await this._exportDrive(payload, options.file, providerOptions);
       default: throw new Error(`Unknown destination ${options.provider}`);
     }
   }
@@ -340,7 +346,7 @@ export class ArcDataExport extends HTMLElement {
    * @param {Object} options Provider options
    * @return {Promise}
    */
-  _exportFile(data, file, options) {
+  async _exportFile(data, file, options) {
     if (!options) {
       options = {};
     }
@@ -359,9 +365,9 @@ export class ArcDataExport extends HTMLElement {
     });
     this.dispatchEvent(e);
     if (!e.defaultPrevented) {
-      return Promise.reject(new Error('File export module not found.'));
+      throw new Error('File export module not found.');
     }
-    return e.detail.result;
+    return await e.detail.result;
   }
   /**
    * Requests application to export data to Google Drive.
@@ -371,7 +377,7 @@ export class ArcDataExport extends HTMLElement {
    * @param {Object} options Provider options
    * @return {Promise}
    */
-  _exportDrive(data, file, options) {
+  async _exportDrive(data, file, options) {
     if (!options) {
       options = {};
     }
@@ -390,9 +396,33 @@ export class ArcDataExport extends HTMLElement {
     });
     this.dispatchEvent(e);
     if (!e.defaultPrevented) {
-      return Promise.reject(new Error('Google Drive export module not found.'));
+      throw new Error('Google Drive export module not found.');
     }
-    return e.detail.result;
+    return await e.detail.result;
+  }
+  /**
+   * Dispatches `encryption-encode` and await for the result.
+   * @param {String} data Data to encode
+   * @param {String} passphrase Passphrase to use to encode the data
+   * @return {Promise} Encoded data.
+   */
+  async _encryptFile(data, passphrase) {
+    if (typeof passphrase !== 'string') {
+      throw new Error('Encryption passphrase needs to be a string.');
+    }
+    const e = new CustomEvent('encryption-encode', {
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+      detail: {
+        data,
+        passphrase,
+        method: 'aes'
+      }
+    });
+    this.dispatchEvent(e);
+    const encoded = await e.detail.result;
+    return encoded || data;
   }
   /**
    * Fired when any element request to export data outside the application
@@ -409,5 +439,14 @@ export class ArcDataExport extends HTMLElement {
    * @param {Any} data The data to export.
    * @param {String} contentType Data content type.
    * @param {String} file Export file name.
+   */
+
+  /**
+   * Dispatched when file encryption was requested
+   *
+   * @event encryption-encode
+   * @param {String} data The data to encode.
+   * @param {String} passphrase Passphrase to use to encode the data
+   * @param {String} method Encryption method. Set to `aes`.
    */
 }

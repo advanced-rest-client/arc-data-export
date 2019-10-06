@@ -33,6 +33,15 @@ describe('<arc-data-export>', function() {
     });
   }
 
+  function untilFileEvent() {
+    return new Promise((resolve) => {
+      window.addEventListener('file-data-save', function f(e) {
+        window.removeEventListener('file-data-save', f);
+        resolve(e);
+      });
+    });
+  }
+
   describe('Basic', function() {
     function mockRev(data) {
       return data.map((item) => {
@@ -42,7 +51,7 @@ describe('<arc-data-export>', function() {
     }
 
     let element;
-    
+
     describe('createExportObject()', function() {
       describe('Base properties()', () => {
         const opts = {};
@@ -849,6 +858,87 @@ describe('<arc-data-export>', function() {
       const element = await electronCookiesFixture();
       element.electronCookies = false;
       assert.isFalse(element.hasAttribute('electroncookies'));
+    });
+  });
+
+  describe('File encryption', () => {
+    let element;
+    let opts;
+    beforeEach(async () => {
+      element = await basicFixture();
+      opts = {
+        options: {
+          provider: 'file',
+          file: 'file.arc',
+          kind: 'ARC#EncodingTest',
+          encrypt: true,
+          passphrase: 'test'
+        },
+        data: {}
+      };
+    });
+
+    function encFactory(e) {
+      e.preventDefault();
+      /* global CryptoJS */
+      const encrypted = CryptoJS.AES.encrypt(e.detail.data, e.detail.passphrase);
+      e.detail.result = Promise.resolve(encrypted.toString());
+    }
+
+    afterEach(() => {
+      window.removeEventListener('encryption-encode', encFactory);
+    });
+
+    it('requests to encrypt the file', async () => {
+      element.arcExport(opts);
+      const spy = sinon.spy();
+      element.addEventListener('encryption-encode', spy);
+      await untilFileEvent();
+      assert.isTrue(spy.called);
+    });
+
+    it('sets encrypted payload', async () => {
+      window.addEventListener('encryption-encode', encFactory);
+      element.arcExport(opts);
+      const e = await untilFileEvent();
+      const encoded = e.detail.content;
+      const bytes = CryptoJS.AES.decrypt(e.detail.content, opts.options.passphrase);
+      const txt = bytes.toString(CryptoJS.enc.Utf8);
+      assert.notEqual(encoded, txt, 'Contains encoded content');
+      const parsed = JSON.parse(txt);
+      assert.equal(parsed.kind, opts.options.kind, 'Contains encoded values');
+    });
+
+    it('returns original content when no provider', async () => {
+      element.arcExport(opts);
+      const e = await untilFileEvent();
+      const parsed = JSON.parse(e.detail.content);
+      assert.equal(parsed.kind, opts.options.kind);
+    });
+
+    it('passphrase can be empty', async () => {
+      opts.options.passphrase = '';
+      window.addEventListener('encryption-encode', encFactory);
+      element.arcExport(opts);
+      const e = await untilFileEvent();
+      const encoded = e.detail.content;
+      const bytes = CryptoJS.AES.decrypt(e.detail.content, opts.options.passphrase);
+      const txt = bytes.toString(CryptoJS.enc.Utf8);
+      assert.notEqual(encoded, txt, 'Contains encoded content');
+      const parsed = JSON.parse(txt);
+      assert.equal(parsed.kind, opts.options.kind, 'Contains encoded values');
+    });
+
+    it('throws when no passphrase', async () => {
+      delete opts.options.passphrase;
+      let err;
+      try {
+        await element.arcExport(opts);
+      } catch (e) {
+        err = e;
+      }
+      assert.ok(err, 'Throws an error');
+      assert.equal(err.message, 'Encryption passphrase needs to be a string.');
     });
   });
 });

@@ -42,12 +42,13 @@
     "@open-wc/testing-karma": "^3.1.38",
     "@polymer/gen-typescript-declarations": "^1.6.2",
     "chance": "^1.1.0",
+    "crypto-js": "^3.1.9-1",
+    "deepmerge": "^4.0.0",
     "es-dev-server": "^1.18.3",
     "husky": "^3.0.8",
     "lint-staged": "^9.4.1",
     "lit-element": "^2.2.1",
-    "sinon": "^7.5.0",
-    "deepmerge": "^4.0.0"
+    "sinon": "^7.5.0"
   },
   "scripts": {
     "test": "karma start --coverage",
