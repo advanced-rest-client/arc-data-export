@@ -344,7 +344,7 @@ export class ArcDataExport extends HTMLElement {
       } else if (value instanceof Array) {
         exportData[key] = value;
       } else {
-        console.warn(`Unknown export data configuration. ${key}.`);
+        // .
       }
     }
     databases = this._getDatabasesInfo(databases);
@@ -411,11 +411,10 @@ export class ArcDataExport extends HTMLElement {
   async _queryCookies() {
     const e = this._dispatchCookieList();
     if (!e.defaultPrevented) {
-      console.warn('session-cookie-list-all not handled');
-      return Promise.resolve({
+      return {
         name: 'cookies',
         data: []
-      });
+      };
     }
     const data = await e.detail.result;
     return {
@@ -499,9 +498,7 @@ export class ArcDataExport extends HTMLElement {
   _getDatabaseEntries(dbName) {
     const options = {
       limit: dbChunk,
-      // jscs:disable
       include_docs: true
-      // jscs:enable
     };
     /* global PouchDB */
     const db = new PouchDB(dbName);
