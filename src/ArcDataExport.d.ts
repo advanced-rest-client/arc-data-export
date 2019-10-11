@@ -128,6 +128,7 @@ declare namespace LogicElements {
      * @returns Promise resolved to the list of documents.
      */
     _fetchEntriesPage(db: object|null, options: object|null): Promise<any>|null;
+    _getClientCertificatesEntries(): any;
 
     /**
      * Requests application to export data to file.

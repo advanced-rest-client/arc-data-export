@@ -46,4 +46,5 @@ declare class ExportProcessor {
   _prepareAuthData(authData: any): any;
   _prepareCookieData(authData: any): any;
   _prepareHostRulesData(hostRules: any): any;
+  _prepareClientCertData(items: any): any;
 }
