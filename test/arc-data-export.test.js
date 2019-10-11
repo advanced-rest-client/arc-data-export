@@ -92,7 +92,8 @@ describe('<arc-data-export>', function() {
         ['Auth', 'auth-data', 'generateBasicAuthData', 'ARC#AuthData'],
         ['Cookies', 'cookies', 'generateCookiesData', 'ARC#Cookie'],
         ['Projects', 'projects', 'generateProjects', 'ARC#ProjectData'],
-        ['Requests basic', 'requests', 'generateRequests', 'ARC#RequestData']
+        ['Requests basic', 'requests', 'generateRequests', 'ARC#RequestData'],
+        // ['Client certificates', 'client-certificates', 'generateClientCertificates', 'ARC#ClientCertificate'],
       ].forEach((item) => {
         describe(`${item[0]} data`, () => {
           const property = item[1];
@@ -951,6 +952,72 @@ describe('<arc-data-export>', function() {
       }
       assert.ok(err, 'Throws an error');
       assert.equal(err.message, 'Encryption passphrase needs to be a string.');
+    });
+  });
+
+  describe('Client certificates', () => {
+    before(async () => DataGenerator.insertCertificatesData());
+    after(async () => DataGenerator.destroyClientCertificates());
+
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('retreives certificate data from the data store', async () => {
+      const result = await element._getClientCertificatesEntries();
+      assert.typeOf(result, 'array', 'result is an array');
+      assert.lengthOf(result, 15, 'result is all items');
+      assert.typeOf(result[0], 'array', 'item is an array');
+    });
+
+    it('returns data from _getExportData()', async () => {
+      const result = await element._getExportData({
+        'client-certificates': true
+      });
+      const certs = result['client-certificates'];
+      assert.typeOf(certs, 'array', 'result is an array');
+      assert.lengthOf(certs, 15, 'result is all items');
+    });
+
+    it('creates export object', async () => {
+      const data = await element._getExportData({
+        'client-certificates': true
+      });
+      const result = element.createExportObject(data, {});
+      const certs = result['client-certificates'];
+      assert.lengthOf(certs, 15, 'result is all items');
+      const cert = certs[0];
+      assert.typeOf(cert, 'object', 'Has certificate object');
+      assert.typeOf(cert.type, 'string', 'Has "type"');
+      assert.typeOf(cert.name, 'string', 'Has "name"');
+      assert.typeOf(cert.created, 'number', 'Has "created"');
+      assert.typeOf(cert.dataKey, 'string', 'Has "dataKey"');
+      assert.typeOf(cert.key, 'string', 'Has "key"');
+      assert.equal(cert.kind, 'ARC#ClientCertificate', 'Has "kind"');
+      assert.typeOf(cert.cert, 'object', 'Has "cert"');
+      assert.typeOf(cert.pKey, 'object', 'Has "pKey"');
+    });
+
+    it('has the certificates on export event', async () => {
+      let data;
+      element.addEventListener('file-data-save', (e) => {
+        e.preventDefault();
+        data = e.detail;
+      });
+      await element.arcExport({
+        options: {
+          provider: 'file',
+          file: 'test-123',
+        },
+        data: {
+          'client-certificates': true
+        }
+      });
+      const content = JSON.parse(data.content);
+      const certs = content['client-certificates'];
+      assert.typeOf(certs, 'array', 'result is an array');
+      assert.lengthOf(certs, 15, 'result is all items');
     });
   });
 });

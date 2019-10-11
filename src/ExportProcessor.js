@@ -48,7 +48,8 @@ export class ExportProcessor {
       ['variables', null, '_prepareVariablesData'],
       ['auth-data', null, '_prepareAuthData'],
       ['cookies', null, '_prepareCookieData'],
-      ['host-rules', null, '_prepareHostRulesData']
+      ['host-rules', null, '_prepareHostRulesData'],
+      ['client-certificates', null, '_prepareClientCertData']
     ].forEach((item) => {
       const items = data[item[0]];
       if (items && items instanceof Array && items.length) {
@@ -169,6 +170,20 @@ export class ExportProcessor {
       delete item._rev;
       delete item._id;
       item.kind = 'ARC#HostRule';
+      return item;
+    });
+  }
+
+  _prepareClientCertData(items) {
+    return items.map(([item, data]) => {
+      item.key = item._id;
+      delete item._rev;
+      delete item._id;
+      item.kind = 'ARC#ClientCertificate';
+      item.cert = data.cert;
+      if (data.key) {
+        item.pKey = data.key;
+      }
       return item;
     });
   }

@@ -2,33 +2,33 @@ import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data
 export const DataHelper = {};
 DataHelper.generateData = function(sample) {
   return DataGenerator.insertSavedRequestData({
-    requestsSize: sample,
-    projectsSize: sample
-  })
-      .then(() => DataGenerator.insertHistoryRequestData({
-        requestsSize: sample
-      }))
-      .then(() => DataGenerator.insertWebsocketData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertUrlHistoryData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertVariablesData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertHeadersSetsData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertCookiesData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertBasicAuthData({
-        size: sample
-      }))
-      .then(() => DataGenerator.insertHostRulesData({
-        size: sample
-      }));
+      requestsSize: sample,
+      projectsSize: sample
+    })
+    .then(() => DataGenerator.insertHistoryRequestData({
+      requestsSize: sample
+    }))
+    .then(() => DataGenerator.insertWebsocketData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertUrlHistoryData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertVariablesData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertHeadersSetsData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertCookiesData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertBasicAuthData({
+      size: sample
+    }))
+    .then(() => DataGenerator.insertHostRulesData({
+      size: sample
+    }));
 
   // var hostRulesData = new PouchDB('host-rules');
   //

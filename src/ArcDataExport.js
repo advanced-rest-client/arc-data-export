@@ -188,6 +188,8 @@ export class ArcDataExport extends HTMLElement {
       if (typeof value === 'boolean' && value) {
         if (key === 'cookies' && this.electronCookies) {
           exportData[key] = await this._queryCookies();
+        } else if (key === 'client-certificates') {
+          exportData[key] = await this._getClientCertificatesEntries();
         } else {
           const dbName = this._getDatabaseName(key);
           const exportKey = this._getExportKeyName(key);
@@ -337,6 +339,31 @@ export class ArcDataExport extends HTMLElement {
     } catch (e) {
       // ..
     }
+  }
+
+  async _getClientCertificatesEntries() {
+    const index = await this._getDatabaseEntries('client-certificates');
+    if (!index.length) {
+      return;
+    }
+    const data = await this._getDatabaseEntries('client-certificates-data');
+    const result = [];
+    for (let i = 0, len = index.length; i < len; i++) {
+      const item = index[i];
+      let dataItem;
+      const { dataKey } = item;
+      for (let j = 0, jLen = data.length; j < jLen; j++) {
+        if (data[j]._id === dataKey) {
+          dataItem = data[j];
+          data.splice(j, 1);
+          break;
+        }
+      }
+      if (dataItem) {
+        result[result.length] = [item, dataItem];
+      }
+    }
+    return result;
   }
   /**
    * Requests application to export data to file.
