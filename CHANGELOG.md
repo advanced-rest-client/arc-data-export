@@ -325,3 +325,13 @@
 
 
 
+# [3.2.0](https://github.com/advanced-rest-client/arc-data-export/compare/0.2.3...3.2.0) (2019-10-11)
+
+
+### Bug Fixes
+
+* fixes [#2](https://github.com/advanced-rest-client/arc-data-export/issues/2) - client certificates export support ([98c0151](https://github.com/advanced-rest-client/arc-data-export/commit/98c0151))
+* fixes [#3](https://github.com/advanced-rest-client/arc-data-export/issues/3) - add encryption to file export ([a7f8d4f](https://github.com/advanced-rest-client/arc-data-export/commit/a7f8d4f))
+
+
+
