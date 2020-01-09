@@ -1,5 +1,5 @@
 import { fixture, assert } from '@open-wc/testing';
-import * as sinon from 'sinon/pkg/sinon-esm.js';
+import * as sinon from 'sinon';
 import 'chance/dist/chance.min.js';
 import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data-generator.js';
 import { DataHelper } from './data-helper.js';
@@ -1018,6 +1018,63 @@ describe('<arc-data-export>', function() {
       const certs = content['client-certificates'];
       assert.typeOf(certs, 'array', 'result is an array');
       assert.lengthOf(certs, 15, 'result is all items');
+    });
+  });
+
+  describe('Client certificates in a requests', () => {
+    let saved;
+    let history;
+
+    beforeEach(() => {
+      saved = [
+        {
+          _id: 't1',
+          method: 'GET',
+          url: 'https://api-domain.com',
+          authType: 'client certificate',
+          auth: { id: 'c1' }
+        }
+      ];
+      history = [
+        {
+          _id: 't1',
+          method: 'GET',
+          url: 'https://api-domain.com',
+          authType: 'client certificate',
+          auth: { id: 'c1' }
+        }
+      ];
+    });
+    // after(async () => await DataGenerator.destroyAll());
+
+    it('does not add client certificates when the event is not handled', async () => {
+      const element = await basicFixture();
+      const data = {
+        saved,
+        history,
+      };
+      const result = await element._getExportData(data);
+      assert.isUndefined(result.saved[0].clientCertificate);
+      assert.isUndefined(result.history[0].clientCertificate);
+    });
+
+    it('adds client certificates when the event is handled', async () => {
+      const element = await basicFixture();
+      const data = {
+        saved,
+        history,
+      };
+      element.addEventListener('client-certificate-get', function f(e) {
+        e.preventDefault();
+        e.detail.result = Promise.resolve({
+          type: 'p12',
+          cert: { data: 'test' },
+          key: { data: 'test' },
+        });
+      });
+      const result = await element._getExportData(data);
+      assert.typeOf(result.saved[0].clientCertificate, 'object');
+      assert.typeOf(result.history[0].clientCertificate, 'object');
     });
   });
 });

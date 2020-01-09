@@ -202,6 +202,13 @@ export class ArcDataExport extends HTMLElement {
         exportData[key] = value;
       }
     }
+    // client certificates support
+    if (exportData.saved) {
+      exportData.saved = await this._processRequestsArray(exportData.saved);
+    }
+    if (exportData.history) {
+      exportData.history = await this._processRequestsArray(exportData.history);
+    }
     return exportData;
   }
   /**
@@ -456,6 +463,60 @@ export class ArcDataExport extends HTMLElement {
     return data;
   }
   /**
+   * Processes request data for required export properties after the data
+   * has been received from the data store but before creating export object.
+   *
+   * @param {Array<Object>} requests A list of requests to process
+   * @return {Promise<Array<Object>>} Promise resolved to altered list of requests.
+   */
+  async _processRequestsArray(requests) {
+    for (let i = 0, len = requests.length; i < len; i++) {
+      const request = requests[i];
+      const { auth={}, authType } = request;
+      if (!auth || authType !== 'client certificate') {
+        continue;
+      }
+      request.clientCertificate = await this._readClientCertificate(auth);
+    }
+    return requests;
+  }
+  /**
+   * Dispatches `client-certificate-get` to read certificate data from
+   * `@advanced-rest-client/arc-models`.
+   *
+   * Note, this method returns `undefined` when the event is not handled.
+   *
+   * @param {Object} auth Client certificates authorization configuration
+   * @return {Promise} A promise resolved to a struct to be passed as
+   * `clientCertificate` property on the request object.
+   */
+  async _readClientCertificate(auth) {
+    const { id } = auth;
+    if (!id) {
+      return;
+    }
+    const e = new CustomEvent('client-certificate-get', {
+      bubbles: true,
+      composed: true,
+      cancelable: true,
+      detail: { id }
+    });
+    this.dispatchEvent(e);
+    const result = await e.detail.result;
+    if (!result) {
+      return;
+    }
+    const info = {
+      type: result.type,
+      cert: [result.cert],
+    };
+    if (result.key) {
+      info.key = [result.key];
+    }
+    return info;
+  }
+
+  /**
    * Fired when any element request to export data outside the application
    *
    * @event file-data-save
@@ -479,5 +540,10 @@ export class ArcDataExport extends HTMLElement {
    * @param {String} data The data to encode.
    * @param {String} passphrase Passphrase to use to encode the data
    * @param {String} method Encryption method. Set to `aes`.
+   */
+
+  /**
+   * @event client-certificate-get
+   * @param {String} id
    */
 }
