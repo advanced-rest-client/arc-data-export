@@ -1073,4 +1073,23 @@ describe('<arc-data-export>', function() {
       assert.typeOf(result.history[0].clientCertificate, 'object');
     });
   });
+
+  describe('_getExportData()', () => {
+    let element;
+    beforeEach(async () => {
+      element = await basicFixture();
+    });
+
+    it('creates a copy of passed values', async () => {
+      const data = {
+        saved: [{ test: true }],
+        'auth-data': [{ test: true }],
+      };
+      const result = await element._getExportData(data);
+      result.saved[0].test = false;
+      result['auth-data'][0].test = false;
+      assert.isTrue(data.saved[0].test);
+      assert.isTrue(data['auth-data'][0].test);
+    });
+  });
 });

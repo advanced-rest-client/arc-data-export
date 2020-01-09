@@ -199,7 +199,7 @@ export class ArcDataExport extends HTMLElement {
           }
         }
       } else if (value instanceof Array) {
-        exportData[key] = value;
+        exportData[key] = this._copyObjectArray(value);
       }
     }
     // client certificates support
@@ -211,6 +211,16 @@ export class ArcDataExport extends HTMLElement {
     }
     return exportData;
   }
+  /**
+   * Creates a shallow copy of each object in the array.
+   *
+   * @param {Array<Object>} arr The array to copy
+   * @return {Array<Object>}
+   */
+  _copyObjectArray(arr) {
+    return arr.map((item) => Object.assign({}, item));
+  }
+
   /**
    * Maps export key from the event to database name.
    * @param {String} key Export data type name from the event.
