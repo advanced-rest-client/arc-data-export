@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@advanced-rest-client/arc-data-generator": "^3.0.7",
+    "@advanced-rest-client/arc-models": "^3.1.0",
     "@advanced-rest-client/eslint-config": "^1.1.4",
     "@advanced-rest-client/testing-karma-sl": "^1.1.0",
     "@commitlint/cli": "^8.3.4",

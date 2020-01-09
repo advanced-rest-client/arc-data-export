@@ -1,6 +1,7 @@
 import { fixture, assert } from '@open-wc/testing';
 import * as sinon from 'sinon';
 import 'chance/dist/chance.min.js';
+import '@advanced-rest-client/arc-models/client-certificate-model.js';
 import { DataGenerator } from '@advanced-rest-client/arc-data-generator/arc-data-generator.js';
 import { DataHelper } from './data-helper.js';
 import '../arc-data-export.js';
@@ -18,6 +19,14 @@ describe('<arc-data-export>', function() {
 
   async function electronCookiesFixture() {
     return (await fixture(`<arc-data-export electroncookies></arc-data-export>`));
+  }
+
+  async function ccFixture() {
+    const elm = await fixture(`<div>
+      <client-certificate-model></client-certificate-model>
+      <arc-data-export appversion="1.0.0-test"></arc-data-export>
+    </div>`);
+    return elm.querySelector('arc-data-export');
   }
 
   function waitUntilFileEvent(done) {
@@ -1018,6 +1027,18 @@ describe('<arc-data-export>', function() {
   });
 
   describe('Client certificates in a requests', () => {
+    let certs;
+    before(async () => {
+      certs = await DataGenerator.insertCertificatesData({
+        size: 5,
+        binary: true,
+      });
+    });
+
+    after(async () => {
+      await DataGenerator.destroyClientCertificates();
+    });
+
     let saved;
     let history;
 
@@ -1041,7 +1062,6 @@ describe('<arc-data-export>', function() {
         }
       ];
     });
-    // after(async () => await DataGenerator.destroyAll());
 
     it('does not add client certificates when the event is not handled', async () => {
       const element = await basicFixture();
@@ -1054,23 +1074,82 @@ describe('<arc-data-export>', function() {
       assert.isUndefined(result.history[0].clientCertificate);
     });
 
-    it('adds client certificates when the event is handled', async () => {
-      const element = await basicFixture();
+    it('inserts certificates into export from data store', async () => {
+      const element = await ccFixture();
+      saved = [
+        {
+          _id: 't1',
+          method: 'GET',
+          url: 'https://t1.com',
+          authType: 'client certificate',
+          auth: { id: certs[0]._id }
+        },
+        {
+          _id: 't2',
+          method: 'GET',
+          url: 'https://t2.com',
+          authType: 'client certificate',
+          auth: { id: certs[1]._id }
+        },
+        {
+          _id: 't3',
+          method: 'GET',
+          url: 'https://t3.com',
+          authType: 'client certificate',
+          auth: { id: certs[1]._id }
+        },
+        {
+          _id: 't4',
+          method: 'GET',
+          url: 'https://t4.com',
+          authType: 'client certificate',
+          auth: { id: 'unknown' }
+        }
+      ];
       const data = {
         saved,
-        history,
       };
-      element.addEventListener('client-certificate-get', function f(e) {
-        e.preventDefault();
-        e.detail.result = Promise.resolve({
-          type: 'p12',
-          cert: { data: 'test' },
-          key: { data: 'test' },
-        });
-      });
       const result = await element._getExportData(data);
-      assert.typeOf(result.saved[0].clientCertificate, 'object');
-      assert.typeOf(result.history[0].clientCertificate, 'object');
+      assert.equal(result.saved[0].auth.id, certs[0]._id, 'keeps cert id in auth object');
+      assert.isUndefined(result.saved[3].auth.id, 'removes missing certificate');
+      assert.typeOf(result['client-certificates'], 'array', 'adds certificates to export');
+      assert.lengthOf(result['client-certificates'], 2, 'does not duplicate certificates');
+    });
+
+    it('creates an export object', async () => {
+      const element = await ccFixture();
+      saved = [
+        {
+          _id: 't1',
+          method: 'GET',
+          url: 'https://t1.com',
+          authType: 'client certificate',
+          auth: { id: certs[0]._id }
+        },
+      ];
+      const data = {
+        saved,
+      };
+      let content;
+      window.addEventListener('file-data-save', (e) => {
+        e.preventDefault();
+        e.detail.result = Promise.resolve();
+        content = e.detail.content;
+      });
+      await element.arcExport({
+        options: {
+          provider: 'file',
+          file: 'test-123',
+        },
+        data
+      });
+      console.log(content);
+      const parsed = JSON.parse(content);
+      assert.typeOf(parsed['client-certificates'], 'array', 'adds certificates to export');
+      assert.lengthOf(parsed['client-certificates'], 1, 'has single certificate');
+      const certKey = parsed['client-certificates'][0].key;
+      const requestId = parsed.requests[0].auth.id;
+      assert.equal(certKey, requestId, 'certificate key matches auth.id');
     });
   });
 

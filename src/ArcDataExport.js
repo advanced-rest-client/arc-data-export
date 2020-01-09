@@ -204,10 +204,10 @@ export class ArcDataExport extends HTMLElement {
     }
     // client certificates support
     if (exportData.saved) {
-      exportData.saved = await this._processRequestsArray(exportData.saved);
+      exportData.saved = await this._processRequestsArray(exportData.saved, exportData);
     }
     if (exportData.history) {
-      exportData.history = await this._processRequestsArray(exportData.history);
+      exportData.history = await this._processRequestsArray(exportData.history, exportData);
     }
     return exportData;
   }
@@ -308,9 +308,25 @@ export class ArcDataExport extends HTMLElement {
     return e;
   }
   /**
+   * Safely reads a datastore entry. It returns undefined if the entry does not exist.
+   *
+   * @param {String} dbName Name of the datastore to get the data from.
+   * @param {String} id The id of the entry
+   * @return {Promise} Resolved promise to the document or undefined.
+   */
+  async _getDatabaseEntry(dbName, id) {
+    /* global PouchDB */
+    const db = new PouchDB(dbName);
+    try {
+      return await db.get(id);
+    } catch (e) {
+      // ...
+    }
+  }
+  /**
    * Returns all data from a database.
    *
-   * @param {String} dbName Name of the datastore t get the data from.
+   * @param {String} dbName Name of the datastore to get the data from.
    * @return {Promise} Resolved promise to array of objects. It always
    * resolves.
    */
@@ -319,7 +335,6 @@ export class ArcDataExport extends HTMLElement {
       limit: this.dbChunk,
       include_docs: true
     };
-    /* global PouchDB */
     const db = new PouchDB(dbName);
     let result = [];
     let hasMore = true;
@@ -477,16 +492,17 @@ export class ArcDataExport extends HTMLElement {
    * has been received from the data store but before creating export object.
    *
    * @param {Array<Object>} requests A list of requests to process
+   * @param {Object} exportData The reference to generated export object
    * @return {Promise<Array<Object>>} Promise resolved to altered list of requests.
    */
-  async _processRequestsArray(requests) {
+  async _processRequestsArray(requests, exportData) {
     for (let i = 0, len = requests.length; i < len; i++) {
       const request = requests[i];
       const { auth={}, authType } = request;
       if (!auth || authType !== 'client certificate') {
         continue;
       }
-      request.clientCertificate = await this._readClientCertificate(auth);
+      await this._addClientCertificate(auth, exportData);
     }
     return requests;
   }
@@ -494,36 +510,40 @@ export class ArcDataExport extends HTMLElement {
    * Dispatches `client-certificate-get` to read certificate data from
    * `@advanced-rest-client/arc-models`.
    *
-   * Note, this method returns `undefined` when the event is not handled.
+   * It adds a certificate object to the export list if the request contains
+   * client certificate authorization and a valid certificate.
+   * This does not change the request object. Import processor has to associate
+   * the `id` from the `auth` object with exported certificates.
    *
    * @param {Object} auth Client certificates authorization configuration
-   * @return {Promise} A promise resolved to a struct to be passed as
-   * `clientCertificate` property on the request object.
+   * @param {Object} exportData The reference to generated export object
+   * @return {Promise}
    */
-  async _readClientCertificate(auth) {
+  async _addClientCertificate(auth, exportData) {
     const { id } = auth;
     if (!id) {
       return;
     }
-    const e = new CustomEvent('client-certificate-get', {
-      bubbles: true,
-      composed: true,
-      cancelable: true,
-      detail: { id }
-    });
-    this.dispatchEvent(e);
-    const result = await e.detail.result;
-    if (!result) {
+    if (Array.isArray(exportData['client-certificates'])) {
+      const cert = exportData['client-certificates'].find(([item]) => item._id === id);
+      if (cert) {
+        return;
+      }
+    }
+    const index = await this._getDatabaseEntry('client-certificates', id);
+    if (!index) {
+      delete auth.id;
       return;
     }
-    const info = {
-      type: result.type,
-      cert: [result.cert],
-    };
-    if (result.key) {
-      info.key = [result.key];
+    const data = await this._getDatabaseEntry('client-certificates-data', index.dataKey);
+    if (!data) {
+      delete auth.id;
+      return;
     }
-    return info;
+    if (!exportData['client-certificates']) {
+      exportData['client-certificates'] = [];
+    }
+    exportData['client-certificates'].push([index, data]);
   }
 
   /**

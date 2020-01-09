@@ -41,20 +41,19 @@ export class ExportProcessor {
       result.requests = this._prepareRequestsList(requests);
     }
     [
-      ['projects', null, '_prepareProjectsList'],
-      ['history', null, '_prepareHistoryDataList'],
-      ['websocket-url-history', null, '_prepareWsUrlHistoryData'],
-      ['url-history', null, '_prepareUrlHistoryData'],
-      ['variables', null, '_prepareVariablesData'],
-      ['auth-data', null, '_prepareAuthData'],
-      ['cookies', null, '_prepareCookieData'],
-      ['host-rules', null, '_prepareHostRulesData'],
-      ['client-certificates', null, '_prepareClientCertData']
-    ].forEach((item) => {
-      const items = data[item[0]];
+      ['projects', '_prepareProjectsList'],
+      ['history', '_prepareHistoryDataList'],
+      ['websocket-url-history', '_prepareWsUrlHistoryData'],
+      ['url-history', '_prepareUrlHistoryData'],
+      ['variables', '_prepareVariablesData'],
+      ['auth-data', '_prepareAuthData'],
+      ['cookies', '_prepareCookieData'],
+      ['host-rules', '_prepareHostRulesData'],
+      ['client-certificates', '_prepareClientCertData']
+    ].forEach(([property, method]) => {
+      const items = data[property];
       if (items && items instanceof Array && items.length) {
-        const expKey = item[1] || item[0];
-        result[expKey] = this[item[2]](items);
+        result[property] = this[method](items);
       }
     });
     return result;
