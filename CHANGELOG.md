@@ -470,3 +470,24 @@
 * increasing the test timeout to clear databases [c402082](https://github.com/advanced-rest-client/arc-data-export/commit/c4020828287dc08d8714983eaaa28ea57d200086) by Pawel Psztyc
 
 
+<a name="3.3.2"></a>
+## [3.3.2](https://github.com/advanced-rest-client/arc-data-export/compare/3.3.0...3.3.2) (2020-01-09)
+
+### Build
+
+* bumping version [af52916](https://github.com/advanced-rest-client/arc-data-export/commit/af52916f347e17e32ca0776004b63eace78b303a) by Pawel Psztyc
+* bumping version [7461b8f](https://github.com/advanced-rest-client/arc-data-export/commit/7461b8f2f8649acf6fc38775f9ea0d129fa0f821) by Pawel Psztyc
+
+
+### Update
+
+* [ci skip] automated merge master->stage. syncing main branches [ae8a680](https://github.com/advanced-rest-client/arc-data-export/commit/ae8a680fddc265d325c93be3c031dc0eee1d2a56) by Ci agent
+* [ci skip] automated merge master->stage. syncing main branches [015a3a6](https://github.com/advanced-rest-client/arc-data-export/commit/015a3a6e50f036ff2a5ba88f3afad5f051e61a88) by Ci agent
+
+
+### Bug Fixes
+
+* fixing certificates export on a request object [5119829](https://github.com/advanced-rest-client/arc-data-export/commit/5119829666509384a01e9c73d745129498802acb) by Pawel Psztyc
+* creating a copy of an export object to not mess up data models [192e812](https://github.com/advanced-rest-client/arc-data-export/commit/192e812b15d5f9fedb1de036d6b72aaa482c84a9) by Pawel Psztyc
+
+
