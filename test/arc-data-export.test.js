@@ -245,13 +245,9 @@ describe('<arc-data-export>', function() {
   describe('arcExport()', function() {
     const sampleSzie = 15;
 
-    before(async () => {
-      return DataHelper.generateData(sampleSzie);
-    });
+    before(async () => await DataHelper.generateData(sampleSzie));
 
-    after(function() {
-      return DataGenerator.destroyAll();
-    });
+    after(async () => await DataGenerator.destroyAll());
 
     const destination = 'file';
 
