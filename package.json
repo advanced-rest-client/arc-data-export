@@ -29,8 +29,17 @@
     "email": "arc@mulesoft.com"
   },
   "dependencies": {
+    "@advanced-rest-client/arc-icons": "^3.1.0",
     "@advanced-rest-client/arc-models": "^4.0.5",
     "@advanced-rest-client/arc-types": "^0.1.2",
+    "@anypoint-web-components/anypoint-button": "^1.1.1",
+    "@anypoint-web-components/anypoint-checkbox": "^1.1.2",
+    "@anypoint-web-components/anypoint-dropdown-menu": "^0.1.16",
+    "@anypoint-web-components/anypoint-input": "^0.2.18",
+    "@anypoint-web-components/anypoint-item": "^1.0.7",
+    "@anypoint-web-components/anypoint-listbox": "^1.1.4",
+    "@polymer/iron-form": "^3.0.1",
+    "lit-element": "^2.3.1",
     "pouchdb": "^7.2.1"
   },
   "devDependencies": {
