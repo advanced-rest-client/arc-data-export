@@ -1,25 +1,47 @@
+/* eslint-disable class-methods-use-this */
+
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportOptionsInternal} ExportOptionsInternal */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportObject} ArcExportObject */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcSavedRequest} ExportArcSavedRequest */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcHistoryRequest} ExportArcHistoryRequest */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcProjects} ExportArcProjects */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcWebsocketUrl} ExportArcWebsocketUrl */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcUrlHistory} ExportArcUrlHistory */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcHostRule} ExportArcHostRule */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcVariable} ExportArcVariable */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcAuthData} ExportArcAuthData */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportProcessedData} ArcExportProcessedData */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcNativeDataExport} ArcNativeDataExport */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportClientCertificateData} ArcExportClientCertificateData */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcClientCertificateData} ExportArcClientCertificateData */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCSavedRequest} ARCSavedRequest */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCHistoryRequest} ARCHistoryRequest */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCAuthData} ARCAuthData */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCWebsocketUrlHistory} ARCWebsocketUrlHistory */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCHostRule} ARCHostRule */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCUrlHistory} ARCUrlHistory */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCVariable} ARCVariable */
+/** @typedef {import('@advanced-rest-client/arc-models').ARCProject} ARCProject */
+
 /**
  * A class that processes ARC data to create a standard export object.
  */
 export class ExportProcessor {
   /**
+   * @param {boolean} electronCookies True if the cookies were read from electron storage
+   */
+  constructor(electronCookies) {
+    this.electronCookies = electronCookies;
+  }
+
+  /**
    * Creates an export object for the data.
    *
-   * @param {Object} data Export options. Available keys:
-   * -   `requests` (Array) List of requests to export
-   * -   `projects` (Array) List of projects to export
-   * -   `history` (Array) List of history requests to export
-   * -   `websocket-url-history` (Array) List of url history object for WS to export
-   * -   `url-history` (Array) List of URL history objects to export
-   * -   `variables` (Array) List of variables to export
-   * -   `auth-data` (Array) List of the auth data objects to export
-   * -   `cookies` (Array) List of cookies to export
-   * -   `kind` (String) The `kind` property of the top export declaration.
-   *      Default to `ARC#AllDataExport`
-   * @param {Object} options Export configuration object
-   * @return {Object} ARC export object declaration.
+   * @param {ArcExportProcessedData[]} exportData
+   * @param {ExportOptionsInternal} options Export configuration object
+   * @return {ArcExportObject} ARC export object declaration.
    */
-  createExportObject(data, options) {
+  createExportObject(exportData, options) {
     const result = {
       createdAt: new Date().toISOString(),
       version: options.appVersion,
@@ -28,162 +50,213 @@ export class ExportProcessor {
     if (options.skipImport) {
       result.loadToWorkspace = true;
     }
-    let requests = [];
-    if (data.requests) {
-      // database export.
-      requests = data.requests;
-    }
-    if (data.saved) {
-      // manual listing.
-      requests = requests.concat(data.saved);
-    }
-    if (requests.length) {
-      result.requests = this._prepareRequestsList(requests);
-    }
-    [
-      ['projects', '_prepareProjectsList'],
-      ['history', '_prepareHistoryDataList'],
-      ['websocket-url-history', '_prepareWsUrlHistoryData'],
-      ['url-history', '_prepareUrlHistoryData'],
-      ['variables', '_prepareVariablesData'],
-      ['auth-data', '_prepareAuthData'],
-      ['cookies', '_prepareCookieData'],
-      ['host-rules', '_prepareHostRulesData'],
-      ['client-certificates', '_prepareClientCertData']
-    ].forEach(([property, method]) => {
-      const items = data[property];
-      if (items && items instanceof Array && items.length) {
-        result[property] = this[method](items);
-      }
+    exportData.forEach(({ key, data }) => {
+      result[key] = this.prepareItem(key, data);
     });
     return result;
   }
 
-  _prepareRequestsList(requests) {
+  /**
+   * @param {keyof ArcNativeDataExport} key
+   * @param {any[]} values
+   * @return {any[]}
+   */
+  prepareItem(key, values) {
+    switch (key) {
+      case 'authdata': return this.prepareAuthData(values);
+      case 'clientcertificates': return this.prepareClientCertData(values);
+      case 'cookies': return this.prepareCookieData(values);
+      case 'history': return this.prepareHistoryDataList(values);
+      case 'hostrules': return this.prepareHostRulesData(values);
+      case 'projects': return this.prepareProjectsList(values);
+      case 'saved': return this.prepareRequestsList(values);
+      case 'urlhistory': return this.prepareUrlHistoryData(values);
+      case 'variables': return this.prepareVariablesData(values);
+      case 'websocketurlhistory': return this.prepareWsUrlHistoryData(values);
+      default: return undefined;
+    }
+  }
+
+  /**
+   * Maps list of request to the export object.
+   * @param {ARCSavedRequest[]} requests The list of requests to process.
+   * @return {ExportArcSavedRequest[]}
+   */
+  prepareRequestsList(requests) {
     const result = requests.map((item) => {
+      const request = /** @type ExportArcSavedRequest */ (item);
+      // @ts-ignore
       if (item.legacyProject) {
         if (item.projects) {
-          item.projects[item.projects.length] = item.legacyProject;
+          // @ts-ignore
+          request.projects[item.projects.length] = item.legacyProject;
         } else {
-          item.projects = [item.legacyProject];
+          // @ts-ignore
+          request.projects = [request.legacyProject];
         }
-        delete item.legacyProject;
+        // @ts-ignore
+        delete request.legacyProject;
       }
-      item.kind = 'ARC#RequestData';
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      return item;
+      request.kind = 'ARC#RequestData';
+      request.key = item._id;
+      delete request._rev;
+      delete request._id;
+      return request;
     });
     return result;
   }
 
-  _prepareProjectsList(projects) {
+  /**
+   * @param {ARCProject[]} projects
+   * @return {ExportArcProjects[]}
+   */
+  prepareProjectsList(projects) {
     return projects.map((item) => {
-      item.kind = 'ARC#ProjectData';
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      return item;
+      const project = /** @type ExportArcProjects */ (item);
+      project.kind = 'ARC#ProjectData';
+      project.key = item._id;
+      delete project._rev;
+      delete project._id;
+      return project;
     });
   }
 
-  _prepareHistoryDataList(history) {
+  /**
+   * @param {ARCHistoryRequest[]} history The list of requests to process.
+   * @return {ExportArcHistoryRequest[]}
+   */
+  prepareHistoryDataList(history) {
     const result = history.map((item) => {
-      item.kind = 'ARC#HistoryData';
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      return item;
+      const request = /** @type ExportArcHistoryRequest */ (item);
+      request.kind = 'ARC#HistoryData';
+      request.key = item._id;
+      delete request._rev;
+      delete request._id;
+      return request;
     });
     return result;
   }
 
-  _prepareWsUrlHistoryData(history) {
-    const result = history.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#WebsocketHistoryData';
-      return item;
+  /**
+   * @param {ARCWebsocketUrlHistory[]} data
+   * @return {ExportArcWebsocketUrl[]}
+   */
+  prepareWsUrlHistoryData(data) {
+    const result = data.map((item) => {
+      const history = /** @type ExportArcWebsocketUrl */ (item);
+      history.key = item._id;
+      delete history._rev;
+      delete history._id;
+      history.kind = 'ARC#WebsocketHistoryData';
+      return history;
     });
     return result;
   }
 
-  _prepareUrlHistoryData(history) {
-    const result = history.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#UrlHistoryData';
-      return item;
+  /**
+   * @param {ARCUrlHistory[]} data
+   * @return {ExportArcUrlHistory[]}
+   */
+  prepareUrlHistoryData(data) {
+    const result = data.map((item) => {
+      const history = /** @type ExportArcUrlHistory */ (item);
+      history.key = item._id;
+      delete history._rev;
+      delete history._id;
+      history.kind = 'ARC#UrlHistoryData';
+      return history;
     });
     return result;
   }
 
-  _prepareVariablesData(variables) {
+  /**
+   * @param {ARCVariable[]} data
+   * @return {ExportArcVariable[]}
+   */
+  prepareVariablesData(data) {
     const result = [];
-    variables.forEach((item) => {
-      if (!item.environment) {
+    data.forEach((item) => {
+      const value = /** @type ExportArcVariable */ (item);
+      if (!value.environment) {
         // PouchDB creates some views in the main datastore and it is added to
         // get all docs function without any reason. It should be eleminated
         return;
       }
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#Variable';
-      result.push(item);
+      value.key = item._id;
+      delete value._rev;
+      delete value._id;
+      value.kind = 'ARC#Variable';
+      result.push(value);
     });
     return result;
   }
 
-  _prepareAuthData(authData) {
+  /**
+   * @param {ARCAuthData[]} authData
+   * @return {ExportArcAuthData[]}
+   */
+  prepareAuthData(authData) {
     const result = authData.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#AuthData';
-      return item;
+      const value = /** @type ExportArcAuthData */ (item);
+      value.key = item._id;
+      delete value._rev;
+      delete value._id;
+      value.kind = 'ARC#AuthData';
+      return value;
     });
     return result;
   }
 
-  _prepareCookieData(authData) {
+  /**
+   * @param {any[]} cookies
+   * @return {any[]}
+   */
+  prepareCookieData(cookies) {
     const isElectron = this.electronCookies;
-    const result = authData.map((item) => {
+    const result = cookies.map((item) => {
+      const value = /** @type any */ (item);
       if (!isElectron) {
-        item.key = item._id;
-        delete item._rev;
-        delete item._id;
+        value.key = item._id;
+        delete value._rev;
+        delete value._id;
       }
-      item.kind = 'ARC#Cookie';
+      value.kind = 'ARC#Cookie';
       return item;
     });
     return result;
   }
 
-  _prepareHostRulesData(hostRules) {
+  /**
+   * @param {ARCHostRule[]} hostRules
+   * @return {ExportArcHostRule[]}
+   */
+  prepareHostRulesData(hostRules) {
     return hostRules.map((item) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#HostRule';
-      return item;
+      const value = /** @type ExportArcHostRule */ (item);
+      value.key = value._id;
+      delete value._rev;
+      delete value._id;
+      value.kind = 'ARC#HostRule';
+      return value;
     });
   }
 
-  _prepareClientCertData(items) {
-    return items.map(([item, data]) => {
-      item.key = item._id;
-      delete item._rev;
-      delete item._id;
-      item.kind = 'ARC#ClientCertificate';
-      item.cert = data.cert;
+  /**
+   * @param {ArcExportClientCertificateData[]} items
+   * @return {ExportArcClientCertificateData[]}
+   */
+  prepareClientCertData(items) {
+    return items.map(({ item, data }) => {
+      const value = /** @type ExportArcClientCertificateData */ (item);
+      value.key = item._id;
+      delete value._rev;
+      delete value._id;
+      value.kind = 'ARC#ClientCertificate';
+      value.cert = data.cert;
       if (data.key) {
-        item.pKey = data.key;
+        value.pKey = data.key;
       }
-      return item;
+      return value;
     });
   }
 }

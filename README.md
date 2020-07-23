@@ -1,16 +1,15 @@
 [![Published on NPM](https://img.shields.io/npm/v/@advanced-rest-client/arc-data-export.svg)](https://www.npmjs.com/package/@advanced-rest-client/arc-data-export)
 
-[![Build Status](https://travis-ci.org/advanced-rest-client/arc-data-export.svg?branch=stage)](https://travis-ci.org/advanced-rest-client/arc-data-export)
+[![Build Status](https://travis-ci.com/advanced-rest-client/arc-data-export.svg)](https://travis-ci.com/advanced-rest-client/arc-data-export)
 
-[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/advanced-rest-client/arc-data-export)
+# Advanced REST Client export module
 
-## &lt;arc-data-export&gt;
+A module containing ARC data export logic and UIs. It has the main export data processing logic (via the `<arc-data-export>` custom element) and helper UIs used when initializing the export flow.
 
-An element to handle data export in Advanced REST Client application. It creates an unified export object.
+## Export architecture
 
-It's event based API allows to use the element anywhere in the DOM and other ARC components will communicate with `arc-data-export` to request data export.
-
-After the export object is created it dispatches `file-data-save` or `google-drive-data-save` custom events depending on export configuration. The element does not handle export operation as this vary depending on the platform. The application should handle this events and perform file/drive data save.
+The data export process is a 2-step process. With the first step the application prepares the data to be exported. The `<arc-data-export>` custom element build an export object with the current ARC standard. The export object can be then imported back to the application via `arc-data-import` module.
+The second step is the data storing which is not handled by this module. Instead this module describes an interface that the data export providers must use (via the events definition).
 
 ## Usage
 
@@ -19,143 +18,47 @@ After the export object is created it dispatches `file-data-save` or `google-dri
 npm install --save @advanced-rest-client/arc-data-export
 ```
 
-### arc-data-export event
+### arc-data-export custom element
+
+An element to handle data export in Advanced REST Client application. It creates an unified export object.
+
+The element/event accepts two configuration options:
+-   export data configuration
+-   export provider configuration
+
+Types are defined in `@advanced-rest-client/arc-types` module under `DataExport` namespace.
+
+Example use of the DOM events
 
 ```javascript
-const e = new CustomEvent('arc-data-export', {
-  bubbles: true,
-  cancelable: true,
-  composed: true,
-  detail: {
-    data: {
-      requests: true,
-      projects: true,
-      'history-url': [{...}]
-    },
-    options: {
-      provider: 'file or drive (at the moment)',
-      file: 'export-file-name.arc',
-      encrypt: true,
-      passphrase: 'some pass phrase'
-    },
-    providerOptions: {
-      contentType: 'application/restclient+data'
-    }
-  }
-});
-this.dispatchEvent(e);
-```
+import { ExportEvents } from '@advanced-rest-client/arc-data-export';
 
-#### data
-
-The data property of the detail object contains a map of export items to process. Possible keys are:
-
--   `all` exports all data from all data stores `{all: true}`
--   `history` - History requests
--   `saved` - Saved requests, this includes projects.
--   `websocket` - Websocket URL history
--   `url-history` - URL history
--   `variables` - Defined application variables
--   `auth` - Stored authorization data
--   `cookies` - Stored cookies data
--   `host-rules` - Host rules data
-
-Each property (expect for `all`) accepts either `true` to export all data from the store or an array of items to export.
-
-```javascript
 const data = {
-  cookies: true,
-  auth: [{...}, {...}]
+  requests: true,
+  projects: true,
+  ...
 };
-```
-
-#### options
-
-Export options.
-
-##### provider
-The `provider` tells which export provider should be used.
-Currently ARC supports `file` and `drive`.
-
-##### file
-Export file name.
-
-##### encrypt
-
-`Boolean`. When set it sends the content for encryption before exporting data to file/drive.
-When set `passphrase` must be also set, even when empty string.
-The component does not support data encoding. It dispatches `encryption-encode` custom event
-for the application to encode the data.
-
-The component requests for AES encryption. The generated file contains `aes` word in the first line
-and encoded value in second line.
-
-##### passphrase
-
-A pass phrase to use to encrypt the content. It must be set to a string, however it can be empty.
-
-#### providerOptions
-
-`providerOptions` object is passed to the corresponding event dispatched to export provider.
-Application can set `contentType` property. Only `application/json` and `application/restclient+data` is currently supported. Everything else is treated as text.
-
-### In an html file
-
-```html
-<html>
-  <head>
-    <script type="module">
-      import '@advanced-rest-client/arc-data-export/arc-data-export.js';
-    </script>
-  </head>
-  <body>
-    <arc-data-export></arc-data-export>
-  </body>
-</html>
-```
-
-### In a LitElement template
-
-```javascript
-import { LitElement, html } from 'lit-element';
-import '@advanced-rest-client/arc-data-export/arc-data-export.js';
-
-class SampleElement extends LitElement {
-  render() { `<arc-data-export></arc-data-export>`; }
-
-  _doExport() {
-    const node = this.shadowRoot.querySelector('arc-data-export');
-    node.arcExport({
-      data: {
-        all: true
-      },
-      options: {
-        provider: 'file',
-        file: 'all-export.arc'
-      }
-    });
-  }
+const exportOptions = {
+  encrypt: true,
+  passphrase: 'pwd',
+  provider: 'file',
+};
+const providerOptions = {
+  file: 'export.json',
+  parent: '/home/me/Documents',
+};
+const result = await ExportEvents.nativeData(document.body, data, exportOptions, providerOptions);
+const { success, interrupted, fileId, parentId } = result;
+if (!success && !interrupted) {
+  // export error
+} else if (!success && interrupted) {
+  // user interrupted
+} else {
+  const fileLocation = `${fileId}/${parentId}`;
 }
-customElements.define('sample-element', SampleElement);
 ```
 
-### In a Polymer 3 element
-
-```js
-import {PolymerElement, html} from '@polymer/polymer';
-import '@advanced-rest-client/arc-data-export/arc-data-export.js';
-
-class SampleElement extends PolymerElement {
-  static get template() {
-    return html`
-    <arc-data-export></arc-data-export>
-    `;
-  }
-}
-customElements.define('sample-element', SampleElement);
-```
-
-### Development
+## Development
 
 ```sh
 git clone https://github.com/@advanced-rest-client/arc-data-export
