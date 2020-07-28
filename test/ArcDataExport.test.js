@@ -2,10 +2,15 @@ import { fixture, assert, html } from '@open-wc/testing';
 import * as sinon from 'sinon';
 import '@advanced-rest-client/arc-models/client-certificate-model.js';
 import { DataGenerator } from '@advanced-rest-client/arc-data-generator';
-import { DataExportEventTypes, SessionCookieEventTypes } from '@advanced-rest-client/arc-types';
+import {
+  DataExportEventTypes,
+  SessionCookieEventTypes,
+  GoogleDriveEventTypes,
+  EncryptionEventTypes,
+  ExportEvents,
+} from '@advanced-rest-client/arc-events';
 import '../arc-data-export.js';
 import { exportFile, exportDrive, encryptData } from '../src/ArcDataExport.js';
-import { ExportEvents } from '../index.js';
 
 /** @typedef {import('../src/ArcDataExport').ArcDataExport} ArcDataExport */
 /** @typedef {import('@advanced-rest-client/arc-types').Cookies.ARCCookie} ARCCookie */
@@ -817,8 +822,8 @@ describe('ArcDataExport', () => {
 
     it('dispatches export event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -829,8 +834,8 @@ describe('ArcDataExport', () => {
 
     it('adds content type when missing', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -841,8 +846,8 @@ describe('ArcDataExport', () => {
 
     it('respects added content type', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -853,8 +858,8 @@ describe('ArcDataExport', () => {
 
     it('has the export data', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -882,8 +887,8 @@ describe('ArcDataExport', () => {
 
     it('dispatches encrypt event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.encryptionEncode, spy);
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, spy);
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -894,8 +899,8 @@ describe('ArcDataExport', () => {
 
     it('adds passphrase to the event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.encryptionEncode, spy);
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, spy);
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -906,8 +911,8 @@ describe('ArcDataExport', () => {
 
     it('adds method to the event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.encryptionEncode, spy);
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, spy);
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -918,8 +923,8 @@ describe('ArcDataExport', () => {
 
     it('has the export data', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.encryptionEncode, spy);
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, spy);
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -929,7 +934,7 @@ describe('ArcDataExport', () => {
     });
 
     it('returns method with encoded data', async () => {
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -949,7 +954,7 @@ describe('ArcDataExport', () => {
     });
 
     it('throws when event no passphrase', async () => {
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -1100,8 +1105,8 @@ describe('ArcDataExport', () => {
 
     it('dispatches drive export event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -1130,7 +1135,7 @@ describe('ArcDataExport', () => {
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
       });
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -1145,7 +1150,7 @@ describe('ArcDataExport', () => {
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
       });
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -1316,8 +1321,8 @@ describe('ArcDataExport', () => {
 
     it('dispatches drive export event', async () => {
       const spy = sinon.spy();
-      element.addEventListener(DataExportEventTypes.googleDiveSave, spy);
-      element.addEventListener(DataExportEventTypes.googleDiveSave, function f(e) {
+      element.addEventListener(GoogleDriveEventTypes.save, spy);
+      element.addEventListener(GoogleDriveEventTypes.save, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
@@ -1346,7 +1351,7 @@ describe('ArcDataExport', () => {
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
       });
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');
@@ -1361,7 +1366,7 @@ describe('ArcDataExport', () => {
         // @ts-ignore
         e.detail.result = Promise.resolve({  });
       });
-      element.addEventListener(DataExportEventTypes.encryptionEncode, function f(e) {
+      element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
         e.detail.result = Promise.resolve('encoded');

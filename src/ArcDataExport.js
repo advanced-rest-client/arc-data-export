@@ -12,16 +12,21 @@ License for the specific language governing permissions and limitations under
 the License.
 */
 import 'pouchdb/dist/pouchdb.js';
-import { DataExportEventTypes, SessionCookieEventTypes } from '@advanced-rest-client/arc-types';
+import {
+  DataExportEventTypes,
+  SessionCookieEventTypes,
+  ExportEvents,
+  GoogleDriveEvents,
+  EncryptionEvents,
+} from '@advanced-rest-client/arc-events';
 import { ExportProcessor } from './ExportProcessor.js';
-import { ExportEvents } from './ExportEvents.js';
 import {
   getDatabaseEntries,
   processRequestsArray,
 } from './DbUtils.js';
 
-/** @typedef {import('./Events').ArcDataExportEvent} ArcDataExportEvent */
-/** @typedef {import('./Events').ArcExportEvent} ArcExportEvent */
+/** @typedef {import('@advanced-rest-client/arc-events').ArcDataExportEvent} ArcDataExportEvent */
+/** @typedef {import('@advanced-rest-client/arc-events').ArcExportEvent} ArcExportEvent */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcNativeDataExport} ArcNativeDataExport */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportOptions} ExportOptions */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ProviderOptions} ProviderOptions */
@@ -408,7 +413,7 @@ export class ArcDataExport extends HTMLElement {
     if (!config.contentType) {
       config.contentType = 'application/restclient+data';
     }
-    const result = await ExportEvents.googleDiveSave(this, data, config);
+    const result = await GoogleDriveEvents.save(this, data, config);
     if (!result) {
       throw new Error('The Goole Drive export provider not found.');
     }
@@ -428,7 +433,7 @@ export class ArcDataExport extends HTMLElement {
     if (typeof passphrase !== 'string') {
       throw new Error('Encryption passphrase needs to be a string.');
     }
-    const encoded = await ExportEvents.encryptionEncode(this, data, passphrase, 'aes');
+    const encoded = await EncryptionEvents.encrypt(this, data, passphrase, 'aes');
     if (!encoded) {
       throw new Error('Encryption module not ready or does not handle the event');
     }
