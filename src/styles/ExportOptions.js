@@ -45,4 +45,8 @@ anypoint-input,
 anypoint-masked-input {
   width: auto;
 }
+
+.autocomplete-input {
+  position: relative;
+}
 `;

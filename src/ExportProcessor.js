@@ -51,6 +51,9 @@ export class ExportProcessor {
       result.loadToWorkspace = true;
     }
     exportData.forEach(({ key, data }) => {
+      if (!data) {
+        return;
+      }
       result[key] = this.prepareItem(key, data);
     });
     return result;
