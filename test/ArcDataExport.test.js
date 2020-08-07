@@ -10,7 +10,7 @@ import {
   ExportEvents,
 } from '@advanced-rest-client/arc-events';
 import '../arc-data-export.js';
-import { exportFile, exportDrive, encryptData } from '../src/ArcDataExport.js';
+import { exportFile, exportDrive, encryptData, prepareExportData } from '../src/ArcDataExport.js';
 
 /** @typedef {import('../src/ArcDataExport').ArcDataExport} ArcDataExport */
 /** @typedef {import('@advanced-rest-client/arc-types').Cookies.ARCCookie} ARCCookie */
@@ -631,7 +631,7 @@ describe('ArcDataExport', () => {
     });
   });
 
-  describe('prepareExportData()', () => {
+  describe('[prepareExportData]()', () => {
     before(async () => {
       await generator.insertCookiesData({
         size: 10,
@@ -659,7 +659,7 @@ describe('ArcDataExport', () => {
       const data = {
         urlhistory: true,
       };
-      const result = await element.prepareExportData('urlhistory', data);
+      const result = await element[prepareExportData]('urlhistory', data);
       assert.equal(result.key, 'urlhistory');
       assert.typeOf(result.data, 'array');
       assert.lengthOf(result.data, 10);
@@ -669,7 +669,7 @@ describe('ArcDataExport', () => {
       const data = {
         cookies: true,
       };
-      const result = await element.prepareExportData('cookies', data);
+      const result = await element[prepareExportData]('cookies', data);
       assert.equal(result.key, 'cookies');
       assert.typeOf(result.data, 'array');
       assert.lengthOf(result.data, 10);
@@ -679,7 +679,7 @@ describe('ArcDataExport', () => {
       const data = {
         clientcertificates: true,
       };
-      const result = await element.prepareExportData('clientcertificates', data);
+      const result = await element[prepareExportData]('clientcertificates', data);
       assert.equal(result.key, 'clientcertificates');
       assert.typeOf(result.data, 'array');
       assert.lengthOf(result.data, 10);
@@ -692,7 +692,7 @@ describe('ArcDataExport', () => {
       const data = {
         authdata: value,
       };
-      const result = await element.prepareExportData('authdata', data);
+      const result = await element[prepareExportData]('authdata', data);
       assert.equal(result.key, 'authdata');
       assert.typeOf(result.data, 'array');
       assert.deepEqual(result.data, value);
@@ -702,7 +702,7 @@ describe('ArcDataExport', () => {
       const data = {
         authdata: false,
       };
-      const result = await element.prepareExportData('authdata', data);
+      const result = await element[prepareExportData]('authdata', data);
       assert.equal(result.key, 'authdata');
       assert.typeOf(result.data, 'array');
       assert.deepEqual(result.data, []);
@@ -953,7 +953,7 @@ describe('ArcDataExport', () => {
       assert.isTrue(thrown);
     });
 
-    it('throws when event no passphrase', async () => {
+    it('throws when event has no passphrase', async () => {
       element.addEventListener(EncryptionEventTypes.encrypt, function f(e) {
         e.preventDefault();
         // @ts-ignore
@@ -961,7 +961,7 @@ describe('ArcDataExport', () => {
       });
       let thrown = false;
       try {
-        await element[encryptData]('test');
+        await element[encryptData]('test', undefined);
       } catch (e) {
         thrown = true;
       }

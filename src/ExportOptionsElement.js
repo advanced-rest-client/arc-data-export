@@ -1,6 +1,5 @@
 import { html } from 'lit-element';
 import '@anypoint-web-components/anypoint-button/anypoint-button.js';
-import '@polymer/iron-form/iron-form.js';
 import elementStyles from './styles/ExportOptions.js';
 import {
   ExportPanelBase,
@@ -82,6 +81,10 @@ export class ExportOptionsElement extends ExportPanelBase {
     this.addEventListener('cancel', value);
   }
 
+  get onresize() {
+    return this[resizeHandlerValue];
+  }
+
   /**
    * Registers a callback function for `resize` event
    * @param {EventListener} value A callback to register. Pass `null` or `undefined`
@@ -100,6 +103,7 @@ export class ExportOptionsElement extends ExportPanelBase {
   }
 
   confirm() {
+    // @ts-ignore
     if (!this[formValue].validate()) {
       return;
     }

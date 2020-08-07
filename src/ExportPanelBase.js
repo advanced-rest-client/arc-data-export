@@ -6,6 +6,7 @@ import '@anypoint-web-components/anypoint-input/anypoint-input.js';
 import '@anypoint-web-components/anypoint-input/anypoint-masked-input.js';
 import '@anypoint-web-components/anypoint-dropdown-menu/anypoint-dropdown-menu.js';
 import '@anypoint-web-components/anypoint-checkbox/anypoint-checkbox.js';
+import '@polymer/iron-form/iron-form.js';
 import {
   GoogleDriveEvents,
   GoogleDriveEventTypes,
@@ -15,6 +16,7 @@ import '@advanced-rest-client/arc-icons/arc-icon.js';
 /** @typedef {import('@advanced-rest-client/arc-types').GoogleDrive.AppFolder} AppFolder */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ProviderOptions} ProviderOptions */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportOptions} ExportOptions */
+/** @typedef {import('@polymer/iron-form').IronFormElement} IronFormElement */
 
 export const destinationTemplate = Symbol('destinationTemplate');
 export const fileInputTemplate = Symbol('fileInputTemplate');
@@ -146,6 +148,9 @@ export class ExportPanelBase extends LitElement {
     this.addEventListener(GoogleDriveEventTypes.listAppFolders, value);
   }
 
+  /**
+   * @return {IronFormElement}
+   */
   get [formValue]() {
     return this.shadowRoot.querySelector('iron-form');
   }
@@ -165,9 +170,7 @@ export class ExportPanelBase extends LitElement {
   }
 
   connectedCallback() {
-    if (super.connectedCallback) {
-      super.connectedCallback();
-    }
+    super.connectedCallback();
     setTimeout(() => {
       if (this.provider === 'drive' && !this.driveFolders) {
         this[listDriveFolders]();
@@ -175,6 +178,9 @@ export class ExportPanelBase extends LitElement {
     });
   }
 
+  /**
+   * @returns {ExportOptions}
+   */
   [buildExportOptions]() {
     const exportOptions = /** @type ExportOptions */ ({
       provider: this.provider,
@@ -187,6 +193,9 @@ export class ExportPanelBase extends LitElement {
     return exportOptions;
   }
 
+  /**
+   * @returns {ProviderOptions}
+   */
   [buildProviderOptions]() {
     const providerOptions = /** @type ProviderOptions */ ({
       file: this.file,

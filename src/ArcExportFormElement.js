@@ -53,6 +53,7 @@ const loadingChangeHandler = Symbol('loadingChangeHandler');
 const arcnativeexportHandler = Symbol('arcnativeexportHandler');
 const notifySuccess = Symbol('notifySuccess');
 const notifyError = Symbol('notifyError');
+const prepare = Symbol('prepare');
 
 function exportItemsTemplate() {
   return html`
@@ -168,7 +169,7 @@ export class ArcExportFormElement extends ExportPanelBase {
   /**
    * Handler for click event. Calls `startExport()` function.
    */
-  _prepare() {
+  [prepare]() {
     this.startExport();
   }
 
@@ -252,7 +253,7 @@ export class ArcExportFormElement extends ExportPanelBase {
 
       <div class="actions">
         <anypoint-button
-          @click="${this._prepare}"
+          @click="${this[prepare]}"
           emphasis="high"
           ?compatibility="${compatibility}"
           ?disabled="${this[loadingProperty]}"

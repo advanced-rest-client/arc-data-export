@@ -1,6 +1,6 @@
 /**
 @license
-Copyright 2018 The Advanced REST client authors <arc@mulesoft.com>
+Copyright 2018-2020 The Advanced REST client authors <arc@mulesoft.com>
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy of
 the License at
@@ -48,6 +48,7 @@ export const exportDrive = Symbol('exportDrive');
 export const queryCookies = Symbol('queryCookies');
 export const encryptData = Symbol('encryptData');
 export const getClientCertificatesEntries = Symbol('getClientCertificatesEntries');
+export const prepareExportData = Symbol('prepareExportData');
 
 /**
  * Maps export key from the event to database name.
@@ -138,7 +139,7 @@ export class ArcDataExport extends HTMLElement {
     this[exportHandler] = this[exportHandler].bind(this);
     this[nativeExportHandler] = this[nativeExportHandler].bind(this);
     /**
-     * A size of datastore read operation in one call.
+     * The size of datastore read operation in a signle fetch.
      */
     this.dbChunk = 1000;
   }
@@ -256,7 +257,7 @@ export class ArcDataExport extends HTMLElement {
    */
   async getExportData(data) {
     const dataKeys = /** @type ExportKey[] */ (Object.keys(data));
-    const ps = dataKeys.map((key) => this.prepareExportData(key, data));
+    const ps = dataKeys.map((key) => this[prepareExportData](key, data));
     const results = await Promise.all(ps);
     const ccindex = results.findIndex(({key}) => key === 'clientcertificates');
     let ccdata;
@@ -299,7 +300,7 @@ export class ArcDataExport extends HTMLElement {
    * @param {ArcNativeDataExport} data A map of datastores to export.
    * @return {Promise<ArcExportProcessedData>}
    */
-  async prepareExportData(key, data) {
+  async [prepareExportData](key, data) {
     const value = /** @type any[] */ (data[key]);
     const result = {
       key,
