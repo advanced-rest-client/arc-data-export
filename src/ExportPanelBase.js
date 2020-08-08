@@ -27,18 +27,18 @@ export const skipImportTemplate = Symbol('skipImportTemplate');
 export const buildExportOptions = Symbol('buildExportOptions');
 export const buildProviderOptions = Symbol('buildProviderOptions');
 export const formValue = Symbol('formValue');
+export const driveFoldersChanged = Symbol('driveFoldersChanged');
+export const driveSuggestionsValue = Symbol('driveSuggestionsValue');
+export const parentNameValue = Symbol('parentNameValue');
 const gdrivelistHandlerValue = Symbol('gdrivelistHandlerValue');
 const providerValue = Symbol('providerValue');
 const isDriveChanged = Symbol('isDriveChanged');
 const listDriveFolders = Symbol('listDriveFolders');
 const driveFoldersValue = Symbol('driveFoldersValue');
-const driveFoldersChanged = Symbol('driveFoldersChanged');
-const driveSuggestionsValue = Symbol('driveSuggestionsValue');
 const inputHandler = Symbol('inputHandler');
 const checkedHandler = Symbol('checkedHandler');
 const parentsInputHandler = Symbol('parentsInputHandler');
 const destinationHandler = Symbol('destinationHandler');
-const parentNameValue = Symbol('parentNameValue');
 
 function stopEvent(e) {
   e.stopPropagation();

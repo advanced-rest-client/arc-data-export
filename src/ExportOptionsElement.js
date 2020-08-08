@@ -25,13 +25,12 @@ const resizeHandlerValue = Symbol('resizeHandlerValue');
 /**
  * `export-options`
  *
- * Export options dialog for ARC.
+ * Export options dialog for Advanced REST Client.
  */
 export class ExportOptionsElement extends ExportPanelBase {
   static get styles() {
     return elementStyles;
   }
-
 
   /**
    * @return {EventListener} Previously registered handler for `accept` event
@@ -102,6 +101,9 @@ export class ExportOptionsElement extends ExportPanelBase {
     this.addEventListener('resize', value);
   }
 
+  /**
+   * Confirm the dialog
+   */
   confirm() {
     // @ts-ignore
     if (!this[formValue].validate()) {
@@ -118,6 +120,9 @@ export class ExportOptionsElement extends ExportPanelBase {
     }));
   }
 
+  /**
+   * Cancels the dialog
+   */
   cancel() {
     this.dispatchEvent(new CustomEvent('cancel'));
   }

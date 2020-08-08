@@ -3,12 +3,7 @@
 /* global PouchDB */
 
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportClientCertificateData} ArcExportClientCertificateData */
-
-/**
- * @typedef {object} PageResult
- * @property {any[]} docs
- * @property {object} config
- */
+/** @typedef {import('./DbUtils').PageResult} PageResult */
 
 /**
  * Safely reads a datastore entry. It returns undefined if the entry does not exist.
@@ -30,18 +25,22 @@ export async function getEntry(dbName, id) {
 /**
  * Fetches a single page of results from the database.
  * @param {PouchDB.Database} db PouchDB instance
- * @param {PouchDB.Core.AllDocsOptions} options Fetch options. This object is altered during the fetch.
+ * @param {PouchDB.Core.AllDocsWithinRangeOptions} options Fetch options. This object is altered during the fetch.
  * @return {Promise<PageResult>} Promise resolved to the list of documents.
  */
-async function fetchEntriesPage(db, options) {
+export async function fetchEntriesPage(db, options) {
+  const queryOptions = {
+    ...options,
+    include_docs: true,
+  };
   try {
-    const response = await db.allDocs(options);
+    const response = await db.allDocs(queryOptions);
     if (response.rows && response.rows.length > 0) {
-      const config = {
-        options,
+      const config = /** @type PouchDB.Core.AllDocsWithinRangeOptions */ ({
+        ...options,
         startkey: response.rows[response.rows.length - 1].id,
         skip: 1,
-      };
+      });
       const docs = response.rows.map((item) => item.doc);
       return {
         docs,
@@ -57,15 +56,14 @@ async function fetchEntriesPage(db, options) {
 /**
  * Returns all data from a database.
  *
- * @param {String} dbName Name of the datastore to get the data from.
+ * @param {string} dbName Name of the datastore to get the data from.
  * @return {Promise<any[]>} Resolved promise to array of objects. It always
  * resolves.
  */
 export async function getDatabaseEntries(dbName, limit) {
-  let options = {
+  let options = /** @type PouchDB.Core.AllDocsWithinRangeOptions */ ({
     limit,
-    include_docs: true
-  };
+  });
   const db = new PouchDB(dbName);
   let result = [];
   let hasMore = true;
@@ -119,7 +117,7 @@ export async function readClientCertificateIfNeeded(id, certificates) {
  * Processes request data for required export properties after the data
  * has been received from the data store but before creating export object.
  *
- * @param {Array<Object>} requests A list of requests to process
+ * @param {object[]} requests A list of requests to process
  * @param {ArcExportClientCertificateData[]} certificates The list of read certificates
  * @return {Promise<ArcExportClientCertificateData[]>} Promise resolved to altered list of requests.
  */

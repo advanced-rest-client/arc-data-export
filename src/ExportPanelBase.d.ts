@@ -1,27 +1,33 @@
 import { TemplateResult, LitElement } from 'lit-element';
 import { IronFormElement } from '@polymer/iron-form';
 import { DataExport, GoogleDrive } from '@advanced-rest-client/arc-types';
+import { Suggestion } from '@anypoint-web-components/anypoint-autocomplete/src/AnypointAutocomplete';
 
 /** @typedef {import('@advanced-rest-client/arc-types').GoogleDrive.AppFolder} AppFolder */
 
-export const destinationTemplate: unique symbol;
-export const fileInputTemplate: unique symbol;
-export const driveInputTemplate: unique symbol;
-export const encyptionPasswordTemplate: unique symbol;
-export const encryptionTemplate: unique symbol;
-export const skipImportTemplate: unique symbol;
-export const buildExportOptions: unique symbol;
-export const buildProviderOptions: unique symbol;
-export const formValue: unique symbol;
+export declare const destinationTemplate: unique symbol;
+export declare const fileInputTemplate: unique symbol;
+export declare const driveInputTemplate: unique symbol;
+export declare const encyptionPasswordTemplate: unique symbol;
+export declare const encryptionTemplate: unique symbol;
+export declare const skipImportTemplate: unique symbol;
+export declare const buildExportOptions: unique symbol;
+export declare const buildProviderOptions: unique symbol;
+export declare const formValue: unique symbol;
+export declare const driveFoldersChanged: unique symbol;
+export declare const driveSuggestionsValue: unique symbol;
+export declare const parentNameValue: unique symbol;
 declare const isDriveChanged: unique symbol;
 declare const listDriveFolders: unique symbol;
-declare const driveFoldersChanged: unique symbol;
 declare const inputHandler: unique symbol;
 declare const destinationHandler: unique symbol;
 declare const parentsInputHandler: unique symbol;
 declare const checkedHandler: unique symbol;
 
 export declare class ExportPanelBase extends LitElement {
+  [driveSuggestionsValue]?: Suggestion[];
+  [parentNameValue]?: string;
+  
   /**
    * Export file name.
    */

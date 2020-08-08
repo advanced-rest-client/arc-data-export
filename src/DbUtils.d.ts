@@ -2,7 +2,7 @@ import { DataExport } from '@advanced-rest-client/arc-types';
 
 declare interface PageResult {
   docs: any[];
-  config: object;
+  config: PouchDB.Core.AllDocsWithinRangeOptions;
 }
 
 /**
@@ -20,7 +20,7 @@ export declare function getEntry(dbName: string, id: string): Promise<any|undefi
  * @param options Fetch options. This object is altered during the fetch.
  * @returns Promise resolved to the list of documents.
  */
-declare function fetchEntriesPage(db: PouchDB.Database, options: PouchDB.Core.AllDocsOptions): Promise<PageResult>;
+export declare function fetchEntriesPage(db: PouchDB.Database, options: PouchDB.Core.AllDocsOptions): Promise<PageResult>;
 
 /**
  * Returns all data from a database.
