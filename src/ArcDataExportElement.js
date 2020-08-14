@@ -71,7 +71,7 @@ function getDatabaseName(key) {
 /**
  * An element to handle data export for ARC.
  */
-export class ArcDataExport extends HTMLElement {
+export class ArcDataExportElement extends HTMLElement {
   static get observedAttributes() {
     return [
       'appversion', 'electroncookies'

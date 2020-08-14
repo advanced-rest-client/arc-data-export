@@ -1,3 +1,3 @@
-import { ArcDataExport } from './src/ArcDataExport.js';
+import { ArcDataExportElement } from './src/ArcDataExportElement.js';
 
-window.customElements.define('arc-data-export', ArcDataExport);
+window.customElements.define('arc-data-export', ArcDataExportElement);

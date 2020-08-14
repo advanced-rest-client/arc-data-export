@@ -10,25 +10,25 @@ import {
   ExportEvents,
 } from '@advanced-rest-client/arc-events';
 import '../arc-data-export.js';
-import { exportFile, exportDrive, encryptData, prepareExportData } from '../src/ArcDataExport.js';
+import { exportFile, exportDrive, encryptData, prepareExportData } from '../src/ArcDataExportElement.js';
 
-/** @typedef {import('../src/ArcDataExport').ArcDataExport} ArcDataExport */
+/** @typedef {import('../src/ArcDataExportElement').ArcDataExportElement} ArcDataExportElement */
 /** @typedef {import('@advanced-rest-client/arc-types').Cookies.ARCCookie} ARCCookie */
 /** @typedef {import('@advanced-rest-client/arc-models').ARCSavedRequest} ARCSavedRequest */
 /** @typedef {import('@advanced-rest-client/arc-models').ARCCertificateIndex} ARCCertificateIndex */
 
-describe('ArcDataExport', () => {
+describe('ArcDataExportElement', () => {
   const generator = new DataGenerator();
 
   /**
-   * @return {Promise<ArcDataExport>}
+   * @return {Promise<ArcDataExportElement>}
    */
   async function basicFixture() {
     return fixture(`<arc-data-export></arc-data-export>`);
   }
 
   /**
-   * @return {Promise<ArcDataExport>}
+   * @return {Promise<ArcDataExportElement>}
    */
   async function electronCookiesFixture() {
     return fixture(html`<arc-data-export electroncookies></arc-data-export>`);
@@ -85,7 +85,7 @@ describe('ArcDataExport', () => {
         await generator.destroySavedRequestData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -155,7 +155,7 @@ describe('ArcDataExport', () => {
         await generator.clearLegacyProjects();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -203,7 +203,7 @@ describe('ArcDataExport', () => {
         await generator.destroyHistoryData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -251,7 +251,7 @@ describe('ArcDataExport', () => {
         await generator.destroyAuthData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -299,7 +299,7 @@ describe('ArcDataExport', () => {
         await generator.destroyWebsocketsData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -347,7 +347,7 @@ describe('ArcDataExport', () => {
         await generator.destroyUrlData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -395,7 +395,7 @@ describe('ArcDataExport', () => {
         await generator.destroyClientCertificates();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -446,7 +446,7 @@ describe('ArcDataExport', () => {
         await generator.destroyHostRulesData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -495,7 +495,7 @@ describe('ArcDataExport', () => {
         await generator.destroyVariablesData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -544,7 +544,7 @@ describe('ArcDataExport', () => {
         await generator.destroyCookiesData();
       });
 
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -583,7 +583,7 @@ describe('ArcDataExport', () => {
     });
 
     describe('Cookies (via electron event) data', () => {
-      let element = /** @type ArcDataExport */ (null);
+      let element = /** @type ArcDataExportElement */ (null);
       beforeEach(async () => {
         element = await electronCookiesFixture();
       });
@@ -650,7 +650,7 @@ describe('ArcDataExport', () => {
       await generator.destroyUrlData();
     });
 
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -710,7 +710,7 @@ describe('ArcDataExport', () => {
   });
 
   describe('createExportObject()', () => {
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -750,7 +750,7 @@ describe('ArcDataExport', () => {
   });
 
   describe('[exportFile]()', () => {
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -815,7 +815,7 @@ describe('ArcDataExport', () => {
   });
 
   describe('[exportDrive]()', () => {
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -880,7 +880,7 @@ describe('ArcDataExport', () => {
   });
 
   describe('[encryptData]()', () => {
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -1014,7 +1014,7 @@ describe('ArcDataExport', () => {
       await generator.destroyCookiesData();
     });
 
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -1230,7 +1230,7 @@ describe('ArcDataExport', () => {
   });
 
   describe('dataExport()', () => {
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });
@@ -1441,7 +1441,7 @@ describe('ArcDataExport', () => {
       await generator.destroyClientCertificates();
     });
 
-    let element = /** @type ArcDataExport */ (null);
+    let element = /** @type ArcDataExportElement */ (null);
     beforeEach(async () => {
       element = await basicFixture();
     });

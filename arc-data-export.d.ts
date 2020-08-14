@@ -1,7 +1,7 @@
-import {ArcDataExport} from './src/ArcDataExport';
+import {ArcDataExportElement} from './src/ArcDataExportElement';
 
 declare global {
   interface HTMLElementTagNameMap {
-    "arc-data-export": ArcDataExport;
+    "arc-data-export": ArcDataExportElement;
   }
 }

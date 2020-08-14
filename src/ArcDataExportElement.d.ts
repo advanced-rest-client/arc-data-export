@@ -22,7 +22,7 @@ declare function getDatabaseName(key: keyof DataExport.ArcNativeDataExport): str
 /**
  * An element to handle data export for ARC.
  */
-export declare class ArcDataExport extends HTMLElement {
+export declare class ArcDataExportElement extends HTMLElement {
   [appVersionValue]?: string;
   [electronCookiesValue]?: boolean;
 
