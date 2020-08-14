@@ -15,7 +15,7 @@ import { ExportOptionsElement } from '../index.js';
 import '../export-options.js';
 
 /** @typedef {import('../index.js').ExportOptionsElement} ExportOptionsElement */
-
+/** @typedef {import('@anypoint-web-components/anypoint-input').AnypointInput} AnypointInput */
 
 /**
  * These are test for ExportPanelBase but since the `ExportOptionsElement` extends
@@ -28,15 +28,15 @@ describe('ExportPanelBase', () => {
   async function basicFixture() {
     return (fixture(`<export-options></export-options>`));
   }
-  //
-  // /**
-  //  * @return {Promise<ExportOptionsElement>}
-  //  */
-  // async function validFixture() {
-  //   return (fixture(`<export-options
-  //     file="test-file"
-  //     provider="file"></export-options>`));
-  // }
+
+  /**
+   * @return {Promise<ExportOptionsElement>}
+   */
+  async function validFixture() {
+    return (fixture(`<export-options
+      file="test-file"
+      provider="file"></export-options>`));
+  }
 
   /**
    * @return {Promise<ExportOptionsElement>}
@@ -52,6 +52,13 @@ describe('ExportPanelBase', () => {
       encryptFile
       passphrase="test-passwd"
     ></export-options>`));
+  }
+
+  /**
+   * @return {Promise<ExportOptionsElement>}
+   */
+  async function driveFixture() {
+    return fixture(`<export-options provider="drive"></export-options>`);
   }
 
   describe('#[formValue]', () => {
@@ -272,6 +279,34 @@ describe('ExportPanelBase', () => {
       element.parentId = 'i1';
       element[driveFoldersChanged]([{ id: 'i1', name: 'n1' }, { id: 'i2', name: 'n2' }]);
       assert.equal(element[parentNameValue], 'n1');
+    });
+  });
+
+  describe('[inputHandler]()', () => {
+    let element = /** @type ExportOptionsElement */ (null);
+    beforeEach(async () => {
+      element = await validFixture();
+    });
+
+    it('updates file property', async () => {
+      const input = /** @type AnypointInput */ (element.shadowRoot.querySelector('anypoint-input[name="file"]'));
+      input.value = 'test';
+      input.dispatchEvent(new CustomEvent('input'));
+      assert.equal(element.file, 'test');
+    });
+  });
+
+  describe('[parentsInputHandler]()', () => {
+    let element = /** @type ExportOptionsElement */ (null);
+    beforeEach(async () => {
+      element = await driveFixture();
+    });
+
+    it('updates file property', async () => {
+      const input = /** @type AnypointInput */ (element.shadowRoot.querySelector('anypoint-input[name="parentId"]'));
+      input.value = 'test';
+      input.dispatchEvent(new CustomEvent('input'));
+      assert.equal(element.parentId, 'test');
     });
   });
 

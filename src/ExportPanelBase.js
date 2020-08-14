@@ -30,14 +30,14 @@ export const formValue = Symbol('formValue');
 export const driveFoldersChanged = Symbol('driveFoldersChanged');
 export const driveSuggestionsValue = Symbol('driveSuggestionsValue');
 export const parentNameValue = Symbol('parentNameValue');
+export const inputHandler = Symbol('inputHandler');
+export const parentsInputHandler = Symbol('parentsInputHandler');
 const gdrivelistHandlerValue = Symbol('gdrivelistHandlerValue');
 const providerValue = Symbol('providerValue');
 const isDriveChanged = Symbol('isDriveChanged');
 const listDriveFolders = Symbol('listDriveFolders');
 const driveFoldersValue = Symbol('driveFoldersValue');
-const inputHandler = Symbol('inputHandler');
 const checkedHandler = Symbol('checkedHandler');
-const parentsInputHandler = Symbol('parentsInputHandler');
 const destinationHandler = Symbol('destinationHandler');
 
 function stopEvent(e) {
@@ -441,7 +441,8 @@ export class ExportPanelBase extends LitElement {
       autovalidate
       invalidmessage="File name is required"
       ?compatibility="${compatibility}"
-      ?outlined="${outlined}">
+      ?outlined="${outlined}"
+    >
       <label slot="label">File name</label>
     </anypoint-input>
     `;

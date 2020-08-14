@@ -4,13 +4,13 @@ import { DataExport } from '@advanced-rest-client/arc-types';
 
 declare function exportItemsTemplate(): TemplateResult;
 
-declare const loadingProperty: unique symbol;
-declare const loadingValue: unique symbol;
-declare const loadingChangeHandler: unique symbol;
-declare const arcnativeexportHandler: unique symbol;
-declare const notifySuccess: unique symbol;
-declare const notifyError: unique symbol;
-declare const prepare: unique symbol;
+export declare const loadingProperty: unique symbol;
+export declare const loadingValue: unique symbol;
+export declare const loadingChangeHandler: unique symbol;
+export declare const arcnativeexportHandler: unique symbol;
+export declare const notifySuccess: unique symbol;
+export declare const notifyError: unique symbol;
+export declare const prepare: unique symbol;
 
 /**
  * Export data form with export flow logic.

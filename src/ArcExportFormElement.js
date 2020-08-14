@@ -47,13 +47,13 @@ import { generateFileName } from './Utils.js';
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportResult} ArcExportResult */
 /** @typedef {import('@polymer/paper-toast').PaperToastElement} PaperToastElement */
 
-const loadingProperty = Symbol('loadingProperty');
-const loadingValue = Symbol('loadingValue');
-const loadingChangeHandler = Symbol('loadingChangeHandler');
-const arcnativeexportHandler = Symbol('arcnativeexportHandler');
-const notifySuccess = Symbol('notifySuccess');
-const notifyError = Symbol('notifyError');
-const prepare = Symbol('prepare');
+export const loadingProperty = Symbol('loadingProperty');
+export const loadingValue = Symbol('loadingValue');
+export const loadingChangeHandler = Symbol('loadingChangeHandler');
+export const arcnativeexportHandler = Symbol('arcnativeexportHandler');
+export const notifySuccess = Symbol('notifySuccess');
+export const notifyError = Symbol('notifyError');
+export const prepare = Symbol('prepare');
 
 function exportItemsTemplate() {
   return html`
@@ -150,7 +150,7 @@ export class ArcExportFormElement extends ExportPanelBase {
    * to clear the listener.
    */
   set onarcnativeexport(value) {
-    if (this[loadingChangeHandler]) {
+    if (this[arcnativeexportHandler]) {
       this.removeEventListener(DataExportEventTypes.nativeData, this[arcnativeexportHandler]);
     }
     if (typeof value !== 'function') {

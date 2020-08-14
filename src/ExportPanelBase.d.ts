@@ -17,17 +17,17 @@ export declare const formValue: unique symbol;
 export declare const driveFoldersChanged: unique symbol;
 export declare const driveSuggestionsValue: unique symbol;
 export declare const parentNameValue: unique symbol;
+export declare const inputHandler: unique symbol;
+export declare const parentsInputHandler: unique symbol;
 declare const isDriveChanged: unique symbol;
 declare const listDriveFolders: unique symbol;
-declare const inputHandler: unique symbol;
 declare const destinationHandler: unique symbol;
-declare const parentsInputHandler: unique symbol;
 declare const checkedHandler: unique symbol;
 
 export declare class ExportPanelBase extends LitElement {
   [driveSuggestionsValue]?: Suggestion[];
   [parentNameValue]?: string;
-  
+
   /**
    * Export file name.
    */
