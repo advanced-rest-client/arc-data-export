@@ -56,3 +56,9 @@ export declare function prepareImportObject(data: string|object): object;
  * @returns A promise resolved to file content
  */
 export declare function readFile(file: File): Promise<string>;
+
+/**
+ * Returns a promise resolved after a timeout.
+ * @param timeout A timeout to wait.
+ */
+export declare function aTimeout(timeout?: number): Promise<void>;

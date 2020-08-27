@@ -5,7 +5,7 @@ import '../arc-data-import.js';
 
 /** @typedef {import('../src/ArcDataImportElement.js').ArcDataImportElement} ArcDataImportElement */
 
-describe.only('PouchDB import to datastore', () => {
+describe('PouchDB import to datastore', () => {
   /**
    * @return {Promise<ArcDataImportElement>}
    */
@@ -94,27 +94,25 @@ describe.only('PouchDB import to datastore', () => {
     });
   });
 
-
   describe('overriding data', () => {
     after(() => {
       return generator.destroyAll();
     });
 
-    beforeEach(async () => {
+    before(async () => {
       element = await basicFixture();
-      data = generator.clone(originalData);
-      const parsed = await element.normalizeImportData(data);
+      const parsed = await element.normalizeImportData(generator.clone(originalData));
       const errors = await element.storeData(parsed);
       assert.isUndefined(errors, 'No errors while importing');
+      const parsed2 = await element.normalizeImportData(generator.clone(originalData));
+      const errors2 = await element.storeData(parsed2);
+      assert.isUndefined(errors2, 'No errors while importing again');
     });
 
-    // this test comes first as variables are always added as new
     it('stores variables data', async () => {
-      const parsed = await element.normalizeImportData(data);
-      const errors = await element.storeData(parsed);
-      assert.isUndefined(errors, 'No errors while importing');
       const result = await generator.getDatastoreVariablesData();
-      assert.lengthOf(result, 4, 'Has 4 variables');
+      // variables in the old systme have no keys
+      assert.lengthOf(result, 8, 'Has 8 variables');
     });
 
     it('stores saved request data', async () => {
@@ -122,7 +120,7 @@ describe.only('PouchDB import to datastore', () => {
       // 1 request is in a project in the test data
       // and this import is missing project ID so it generates IDs again
       // so together it should give 2 from previous import + 1 new
-      assert.lengthOf(result, 7, 'Has 7 requests');
+      assert.lengthOf(result, 5, 'Has 5 requests');
     });
 
     it('stores projects data', async () => {

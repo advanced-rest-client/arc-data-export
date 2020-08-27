@@ -15,11 +15,22 @@ export declare class BaseTransformer {
   constructor(data: any);
 
   /**
-   * Executes function in next event loop.
+   * Generates request's datastore ID value.
    *
-   * @param fn A function to be executed in next event loop.
+   * @param item A request object property.
+   * @param projectId If set it adds project information to the ID.
+   * @returns Request ID value.
    */
-  deffer(fn: Function): void;
+  generateRequestId(item: DataExport.ExportArcSavedRequest | DataExport.ExportArcHistoryRequest, projectId?: string): string;
+
+  /**
+   * Computes history item ID
+   *
+   * @param timestamp The timestamp to use
+   * @param item History item
+   * @returns Datastore ID
+   */
+  generateHistoryId(timestamp: number, item: DataExport.ExportArcHistoryRequest): string;
 
   /**
    * Sets hours, minutes, seconds and ms to 0 and returns timestamp.

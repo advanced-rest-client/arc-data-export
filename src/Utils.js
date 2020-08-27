@@ -165,3 +165,14 @@ export function readFile(file) {
     reader.readAsText(file);
   });
 }
+
+/**
+ * Returns a promise resolved after a timeout.
+ * @param {number=} [timeout=0] A timeout to wait.
+ * @returns {Promise<void>}
+ */
+export async function aTimeout(timeout=0) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout);
+  });
+}

@@ -28,7 +28,7 @@ import { ImportDataStore } from './lib/ImportDataStore.js';
 import { ArcLegacyTransformer } from './transformers/ArcLegacyTransformer.js';
 import { ArcDexieTransformer } from './transformers/ArcDexieTransformer.js';
 import { ArcPouchTransformer } from './transformers/ArcPouchTransformer.js';
-import { PostmanDataTransformer } from './transformers/postman-data-transformer.js';
+import { PostmanDataTransformer } from './transformers/PostmanDataTransformer.js';
 import {
   isSingleRequest,
   isPostman,
@@ -355,10 +355,10 @@ export class ArcDataImportElement extends LitElement {
    * Processes import file data.
    * It tests if the file is API data or ARC/Postan dump.
    * If it is an API definition (zip file or actuall API file) then it
-   * dispatches `api-process-file` custom event. Otherwise it tries to import
-   * file data.
+   * dispatches a custom event handled by the API processing factory.
+   * Otherwise it tries to import file data.
    *
-   * @param {File} file User file
+   * @param {File|Uint8Array|Buffer} file User file from the web or electron environment.
    * @param {FileImportOptions=} opts Additional options. `driveId` is only supported.
    * @return {Promise}
    */
@@ -371,30 +371,34 @@ export class ArcDataImportElement extends LitElement {
       'application/x-raml',
       'application/x-zip-compressed',
     ];
-    if (apiTypes.indexOf(file.type) !== -1) {
-      return this[notifyApiParser](file);
+    const typedFile = /** @type File */ (file);
+    const isFile = !(file instanceof Uint8Array);
+
+    if (isFile && apiTypes.indexOf(typedFile.type) !== -1) {
+      return this[notifyApiParser](typedFile);
     }
+
     // RAML files
-    if (
-      file.name &&
-      (file.name.indexOf('.raml') !== -1 ||
-        file.name.indexOf('.yaml') !== -1 ||
-        file.name.indexOf('.zip') !== -1)
+    if (isFile && typedFile.name &&
+      (typedFile.name.indexOf('.raml') !== -1 ||
+        typedFile.name.indexOf('.yaml') !== -1 ||
+        typedFile.name.indexOf('.zip') !== -1)
     ) {
-      return this[notifyApiParser](file);
+      return this[notifyApiParser](typedFile);
     }
+
     const id = new Date().toISOString();
     ProcessEvents.loadingstart(this, id, 'Procerssing file data');
     let content;
-    if (file instanceof Uint8Array) {
+    if (!isFile) {
       content = file.toString();
     } else {
-      content = await readFile(file);
+      content = await readFile(typedFile);
     }
     content = content.trim();
     content = await this[decryptIfNeeded](content);
     if (content[0] === '#' && content.indexOf('#%RAML') === 0) {
-      return this[notifyApiParser](file);
+      return this[notifyApiParser](typedFile);
     }
     let data;
     try {
@@ -405,7 +409,7 @@ export class ArcDataImportElement extends LitElement {
     }
     if (data.swagger) {
       ProcessEvents.loadingstop(this, id);
-      return this[notifyApiParser](file);
+      return this[notifyApiParser](typedFile);
     }
     const importData = await this.normalizeImportData(data);
     ProcessEvents.loadingstop(this, id);

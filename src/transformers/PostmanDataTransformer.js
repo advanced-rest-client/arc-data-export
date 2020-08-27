@@ -1,7 +1,10 @@
-import { PostmanBackupTransformer } from './postman-backup-transformer.js';
-import { PostmanEnvTransformer } from './postman-env-transformer.js';
-import { PostmanV1Transformer } from './postman-v1-transformer.js';
-import { PostmanV2Transformer } from './postman-v2-transformer.js';
+/* eslint-disable class-methods-use-this */
+
+import { PostmanBackupTransformer } from './PostmanBackupTransformer.js';
+import { PostmanEnvTransformer } from './PostmanEnvTransformer.js';
+import { PostmanV1Transformer } from './PostmanV1Transformer.js';
+import { PostmanV2Transformer } from './PostmanV2Transformer.js';
+import { PostmanV21Transformer } from './PostmanV21Transformer.js';
 
 export class PostmanDataTransformer {
   transform(data) {
@@ -19,6 +22,9 @@ export class PostmanDataTransformer {
         break;
       case 'collection-v2':
         instance = new PostmanV2Transformer(data);
+        break;
+      case 'collection-v2.1':
+        instance = new PostmanV21Transformer(data);
         break;
       default: return Promise.reject(new Error('Unsupported Postman version.'));
     }
@@ -41,7 +47,9 @@ export class PostmanDataTransformer {
           return 'collection-v2';
         case 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json':
           return 'collection-v2.1';
+        default: return undefined;
       }
     }
+    return undefined;
   }
 }

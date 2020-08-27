@@ -1,4 +1,9 @@
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ArcExportObject} ArcExportObject */
+
 export const DataHelper = {};
+/**
+ * @return {File}
+ */
 DataHelper.generateArcImportFile = () => {
   const data = `{
     "createdAt": "2019-02-02T21:58:25.467Z",
@@ -6,9 +11,11 @@ DataHelper.generateArcImportFile = () => {
     "kind": "ARC#AllDataExport",
     "requests": []
   }`;
-  const file = new Blob([data], { type: 'application/json' });
+  const file = /** @type File */ (new Blob([data], { type: 'application/json' }));
   // @ts-ignore
   file.name = 'arc-export.json';
+  // @ts-ignore
+  file.lastModified = Date.now();
   return file;
 };
 
@@ -26,26 +33,36 @@ DataHelper.generateElectronBuffer = () => {
   return uint8;
 };
 
+/**
+ * @return {File}
+ */
 DataHelper.generateRamlUnknownFile = () => {
   const data = `#%RAML 1.0
   baseUri: https://api.domain.com
   `;
-  const file = new Blob([data]);
+  const file = /** @type File */ (new Blob([data]));
   return file;
 };
+/**
+ * @return {File}
+ */
 DataHelper.generateOas2JsonUnknownFile = () => {
   const data = `{"swagger": true}`;
-  const file = new Blob([data]);
+  const file = /** @type File */ (new Blob([data]));
   return file;
 };
-
+/**
+ * @return {File}
+ */
 DataHelper.generateJsonErrorFile = () => {
   const data = `{swagger: true}`;
-  const file = new Blob([data]);
+  const file = /** @type File */ (new Blob([data]));
   return file;
 };
 
-
+/**
+ * @return {ArcExportObject}
+ */
 DataHelper.generateSingleRequestImport = () => {
   return {
     requests: [{
@@ -57,6 +74,8 @@ DataHelper.generateSingleRequestImport = () => {
       method: 'POST',
       payload: '{}',
       url: 'https://www.domain.com/customers',
+      name: 'test',
+      type: 'saved',
     }],
     createdAt: '2019-02-02T21:58:25.467Z',
     version: '13.0.0',
@@ -64,6 +83,9 @@ DataHelper.generateSingleRequestImport = () => {
   };
 };
 
+/**
+ * @return {ArcExportObject}
+ */
 DataHelper.generateMultiRequestImport = () => {
   return {
     requests: [{
@@ -75,6 +97,8 @@ DataHelper.generateMultiRequestImport = () => {
       method: 'POST',
       payload: '{}',
       url: 'https://www.domain.com/customers',
+      name: 'test1',
+      type: 'saved',
     }, {
       key: '20013905-9b5a-49d9-adc8-f76ec3ead2f1',
       kind: 'ARC#RequestData',
@@ -84,6 +108,8 @@ DataHelper.generateMultiRequestImport = () => {
       method: 'POST',
       payload: '{}',
       url: 'https://www.domain.com/other',
+      name: 'test2',
+      type: 'saved',
     }],
     createdAt: '2019-02-02T21:58:25.467Z',
     version: '13.0.0',
@@ -91,6 +117,9 @@ DataHelper.generateMultiRequestImport = () => {
   };
 };
 
+/**
+ * @return {ArcExportObject}
+ */
 DataHelper.generateProjectImportOpen = () => {
   return {
     requests: [{
@@ -102,7 +131,9 @@ DataHelper.generateProjectImportOpen = () => {
       method: 'POST',
       payload: '{}',
       url: 'https://www.domain.com/customers',
-      projects: ['24550674-868e-411c-9359-09e59c91956c']
+      projects: ['24550674-868e-411c-9359-09e59c91956c'],
+      name: 'test',
+      type: 'saved',
     }],
     projects: [{
       order: 0,

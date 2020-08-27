@@ -1,6 +1,8 @@
 import { assert } from '@open-wc/testing';
+import { DataGenerator } from '@advanced-rest-client/arc-data-generator';
 import { DataTestHelper } from './DataTestHelper.js';
 import { ArcPouchTransformer } from '../src/transformers/ArcPouchTransformer.js';
+import { ExportProcessor } from '../src/ExportProcessor.js';
 
 describe('ArcPouchTransformer', () => {
   describe('previous version', () => {
@@ -26,11 +28,10 @@ describe('ArcPouchTransformer', () => {
       assert.typeOf(result.history, 'array');
       assert.typeOf(result.variables, 'array');
       assert.typeOf(result.cookies, 'array');
-      assert.typeOf(result['websocket-url-history'], 'array');
-      assert.typeOf(result['url-history'], 'array');
-      assert.typeOf(result['headers-sets'], 'array');
-      assert.typeOf(result['auth-data'], 'array');
-      assert.typeOf(result['host-rules'], 'array');
+      assert.typeOf(result.websocketurlhistory, 'array');
+      assert.typeOf(result.urlhistory, 'array');
+      assert.typeOf(result.authdata, 'array');
+      assert.typeOf(result.hostrules, 'array');
     });
 
     it('has all the data', () => {
@@ -39,11 +40,10 @@ describe('ArcPouchTransformer', () => {
       assert.lengthOf(result.history, 3, 'has 3 history');
       assert.lengthOf(result.variables, 4, 'has 4 variables');
       assert.lengthOf(result.cookies, 2, 'has 2 cookies');
-      assert.lengthOf(result['websocket-url-history'], 1, 'has 1 websocket url');
-      assert.lengthOf(result['url-history'], 5, 'has 5 history urls');
-      assert.lengthOf(result['headers-sets'], 1, 'has 1 header set');
-      assert.lengthOf(result['auth-data'], 1, 'has 1 auth data');
-      assert.lengthOf(result['host-rules'], 1, 'has 1 host rules');
+      assert.lengthOf(result.websocketurlhistory, 1, 'has 1 websocket url');
+      assert.lengthOf(result.urlhistory, 5, 'has 5 history urls');
+      assert.lengthOf(result.authdata, 1, 'has 1 auth data');
+      assert.lengthOf(result.hostrules, 1, 'has 1 host rules');
     });
 
     it('has valid request objects', () => {
@@ -178,6 +178,109 @@ describe('ArcPouchTransformer', () => {
       assert.equal(item.kind, 'ARC#ClientCertificate', 'has the kind');
       assert.typeOf(item.cert, 'object', 'has the cert');
       assert.typeOf(item.pKey, 'object', 'has the pKey');
+    });
+  });
+
+  describe('Current export system', () => {
+    const generator = new DataGenerator();
+    const exportFactory = new ExportProcessor(false);
+
+    function createExport(key, data) {
+      return exportFactory.createExportObject([
+        {
+          key,
+          data,
+        },
+      ], {
+        appVersion: 'test',
+        provider: 'test',
+      });
+    }
+
+    it('does not process the saved requests data', async () => {
+      const projects = generator.generateProjects({
+        projectsSize: 1
+      });
+      const data = generator.generateRequests({
+        requestsSize: 2,
+      });
+      const exportObject = exportFactory.createExportObject([
+        {
+          key: 'projects',
+          data: projects,
+        },
+        {
+          key: 'saved',
+          data,
+        },
+      ], {
+        appVersion: 'test',
+        provider: 'test',
+      });
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.requests, result.requests);
+      assert.deepEqual(exportObject.projects, result.projects);
+    });
+
+    it('does not process the history requests data', async () => {
+      const data = generator.generateHistoryRequestsData({
+        requestsSize: 2,
+      });
+      const exportObject = createExport('history', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.history, result.history);
+    });
+
+    it('does not process the ws url data', async () => {
+      const data = generator.generateUrlsData({
+        size: 2,
+      });
+      const exportObject = createExport('websocketurlhistory', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.websocketurlhistory, result.websocketurlhistory);
+    });
+
+    it('does not process the url history data', async () => {
+      const data = generator.generateUrlsData({
+        size: 2,
+      });
+      const exportObject = createExport('urlhistory', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.urlhistory, result.urlhistory);
+    });
+
+    it('does not process the url history data', async () => {
+      const data = generator.generateVariablesData({
+        size: 2,
+      });
+      const exportObject = createExport('variables', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.variables, result.variables);
+    });
+
+    it('does not process the url history data', async () => {
+      const data = generator.generateBasicAuthData({
+        size: 2,
+      });
+      const exportObject = createExport('authdata', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.authdata, result.authdata);
+    });
+
+    it('does not process the host rules data', async () => {
+      const data = generator.generateHostRulesData({
+        size: 2,
+      });
+      const exportObject = createExport('hostrules', data);
+      const factory = new ArcPouchTransformer(exportObject);
+      const result = await factory.transform();
+      assert.deepEqual(exportObject.hostrules, result.hostrules);
     });
   });
 });

@@ -6,6 +6,10 @@
 
 A module containing ARC data export logic and UIs. It has the main export data processing logic (via the `<arc-data-export>` custom element) and helper UIs used when initializing the export flow.
 
+## Deprecation notice
+
+This element is deprecated. It has been replaced by the `@advanced-rest-client/arc-io` package.
+
 ## Export architecture
 
 The data export process is a 2-step process. With the first step the application prepares the data to be exported. The `<arc-data-export>` custom element build an export object with the current ARC standard. The export object can be then imported back to the application via `arc-data-import` module.

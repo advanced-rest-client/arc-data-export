@@ -2,7 +2,8 @@
   "createdAt": "2017-09-25T20:54:48.615Z",
   "version": "9.14.64.305",
   "kind": "ARC#AllDataExport",
-  "requests": [{
+  "requests": [
+    {
       "headers": "x-test: true",
       "method": "POST",
       "name": "request-0",
@@ -59,7 +60,8 @@
       "kind": "ARC#RequestData"
     }
   ],
-  "projects": [{
+  "projects": [
+    {
     "name": "test-project-1",
     "order": 0,
     "created": 1506223472294,
@@ -74,7 +76,8 @@
     "_referenceId": "a9jb754d-74e4-44b0-af75-f5fe76f0180e",
     "kind": "ARC#ProjectData"
   }],
-  "history": [{
+  "history": [
+    {
       "created": 1506223403380,
       "updated": 1506223442093,
       "method": "GET",
@@ -100,13 +103,15 @@
       "kind": "ARC#HistoryData"
     }
   ],
-  "websocket-url-history": [{
+  "websocket-url-history": [
+    {
     "cnt": 1,
     "time": 1506372512925,
     "key": "wss://echo.websocket.org",
     "kind": "ARC#WebsocketHistoryData"
   }],
-  "url-history": [{
+  "url-history": [
+    {
       "cnt": 1,
       "time": 1506370997614,
       "key": "http://localhost:3000/api/test",
@@ -166,13 +171,6 @@
       "kind": "ARC#Variable"
     }
   ],
-  "headers-sets": [{
-    "name": "test set",
-    "headers": "content-type: abc",
-    "created": 1506223641455,
-    "order": 0,
-    "kind": "ARC#HeadersSet"
-  }],
   "auth-data": [{
     "encoded": "dXNlcjpwYXNzd2Q=",
     "key": "basic/https%3A%2F%2Fhttpbin.org%2Fbasic-auth%2Fuser%2Fpasswd",

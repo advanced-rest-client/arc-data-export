@@ -42,7 +42,6 @@ export class ArcPouchTransformer extends BaseTransformer {
    */
   async transform() {
     const data = /** @type ArcExportObject */ (this[dataValue]);
-
     if (data.projects && data.projects.length) {
       data.projects = this.transformProjects(data.projects);
     }
@@ -107,9 +106,10 @@ export class ArcPouchTransformer extends BaseTransformer {
   transformRequests(requests, projects=[]) {
     return requests.map((request) => {
       if (!request.key) {
-        request.key = v4();
+        // @ts-ignore
+        const refId = request._referenceLegacyProject || request.legacyProject;
+        request.key = this.generateRequestId(request, refId);
       }
-
       // @ts-ignore
       const refId = request._referenceLegacyProject || request.legacyProject;
       if (refId) {
@@ -145,7 +145,7 @@ export class ArcPouchTransformer extends BaseTransformer {
       result.headers = item.headers || '';
       result.payload = item.payload || '';
       if (!result.key) {
-        result.key = v4();
+        result.key = this.generateHistoryId(item.created, item);
       }
       return result;
     });

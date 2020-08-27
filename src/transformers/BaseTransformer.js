@@ -2,6 +2,7 @@
 /* eslint-disable no-param-reassign */
 
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcSavedRequest} ExportArcSavedRequest */
+/** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcHistoryRequest} ExportArcHistoryRequest */
 /** @typedef {import('@advanced-rest-client/arc-types').DataExport.ExportArcProjects} ExportArcProjects */
 
 export const dataValue = Symbol('dataValue');
@@ -19,18 +20,45 @@ export class BaseTransformer {
   }
 
   /**
-   * Executes function in next event loop.
+   * Generates request's datastore ID value.
    *
-   * @param {Function} fn A function to be executed in next event loop.
+   * @param {ExportArcSavedRequest | ExportArcHistoryRequest} item A request object property.
+   * @param {string=} projectId If set it adds project information to the ID.
+   * @return {string} Request ID value.
    */
-  deffer(fn) {
-    if (typeof process !== 'undefined' && process.nextTick) {
-      process.nextTick(fn.bind(this));
-    } else if (typeof window !== 'undefined' && window.requestAnimationFrame) {
-      window.requestAnimationFrame(fn.bind(this));
-    } else {
-      setTimeout(fn.bind(this), 16);
+  generateRequestId(item, projectId) {
+    const assumed = /** @type ExportArcSavedRequest */ (item);
+    const name = (assumed.name || 'unknown name').toLowerCase();
+    const url = (item.url || 'https://').toLowerCase();
+    const method = (item.method || 'GET').toLowerCase();
+
+    const ename = encodeURIComponent(name);
+    const eurl = encodeURIComponent(url);
+
+    let id = `${ename}/${eurl}/${method}`;
+    if (projectId) {
+      id += `/${projectId}`;
     }
+    return id;
+  }
+
+  /**
+   * Computes history item ID
+   *
+   * @param {number} timestamp The timestamp to use
+   * @param {ExportArcHistoryRequest} item History item
+   * @return {string} Datastore ID
+   */
+  generateHistoryId(timestamp, item) {
+    const url = item.url.toLowerCase();
+    const method = item.method.toLowerCase();
+    let today;
+    try {
+      today = this.getDayToday(timestamp);
+    } catch (e) {
+      today = this.getDayToday(Date.now());
+    }
+    return `${today}/${encodeURIComponent(url)}/${method}`;
   }
 
   /**

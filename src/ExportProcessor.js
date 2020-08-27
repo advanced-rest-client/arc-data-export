@@ -42,11 +42,12 @@ export class ExportProcessor {
    * @return {ArcExportObject} ARC export object declaration.
    */
   createExportObject(exportData, options) {
-    const result = {
+    const result = /** @type ArcExportObject */ ({
       createdAt: new Date().toISOString(),
       version: options.appVersion,
-      kind: options.kind
-    };
+      kind: options.kind,
+      electronCookies: this.electronCookies,
+    });
     if (options.skipImport) {
       result.loadToWorkspace = true;
     }
