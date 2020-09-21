@@ -6,6 +6,8 @@
 
 ## &lt;arc-data-export&gt;
 
+> The component is deprecated. Use `arc-ie` module instead.
+
 An element to handle data export in Advanced REST Client application. It creates an unified export object.
 
 It's event based API allows to use the element anywhere in the DOM and other ARC components will communicate with `arc-data-export` to request data export.
